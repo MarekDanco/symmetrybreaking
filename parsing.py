@@ -301,7 +301,7 @@ def lnh(ids, constants, s):
 
 def testme(inp):
     """Test on string inp."""
-    # print(inp)
+    print(inp)
     p = Parser()
 
     tree = p.parse(inp)
@@ -311,7 +311,6 @@ def testme(inp):
     flattened = transform(tree)
     # print("Flattened tree:")
     # print(tostr(flattened))
-    print()
 
     s = 6
     ids = IDPool()
