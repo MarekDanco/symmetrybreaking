@@ -323,7 +323,7 @@ def testme(inp):
     cnf += lnh(ids, constants, s)
     # print_cnf(ids, cnf)
 
-    solver = Solver(name="g3", bootstrap_with=cnf)
+    solver = Solver(name="cd", bootstrap_with=cnf)
     counter = 0
     while True:
         counter += 1
