@@ -19,23 +19,23 @@ def larger_set(pi, d, s):
     return {i for i in range(s) if pi[i] > d}
 
 
-# relaxation variable for "following cells are less or equal"
 def relax(ids, pi, i):
+    """Relaxation variable for "following cells are less or equal"."""
     return ids.id(("r", pi, i))
 
 
-# relaxation variable for "cell is less than another cell"
 def less(ids, pi, cell):
+    """Relaxation variable for "cell is less than another cell"."""
     return ids.id(("l", pi, tuple(cell)))
 
 
-# relaxation variable for "cells are equal"
 def equal(ids, pi, cell):
+    """Relaxation variable for "cells are equal"."""
     return ids.id(("e", pi, tuple(cell)))
 
 
-# substitute "cell is less than another cell"
 def sub_l(ids, pi, cell, s):
+    """Substitute "cell is less than inv(cell)" constraint with a variable."""
     clauses = []
     less_subclause = -less(ids, pi, cell)
     inverse = inv(pi)
@@ -50,8 +50,8 @@ def sub_l(ids, pi, cell, s):
     return clauses
 
 
-# substitute "cells are equal"
 def sub_e(ids, pi, cell, s):
+    """Substitute "cell and inv(cell) are equal" constraint with a variable."""
     clauses = []
     e = -equal(ids, pi, cell)
     inverse = inv(pi)
@@ -138,7 +138,7 @@ def minimal(ids, s, transpositions):
             e = equal(ids, pi, cell)
             clauses += [[r, l, e], [r, l, relax(ids, pi, i)]]
 
-        # constraints for the last cell, uses relax variable from the second last cell
+        # constraints for the last cell
         clauses += [
             [
                 -relax(ids, pi, s**2 - 2),
