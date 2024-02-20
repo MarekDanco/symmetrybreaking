@@ -1,6 +1,6 @@
 """Functions for encoding the lexicographically minimal model into cnf."""
 
-from printing import var
+from basics import var
 from itertools import permutations, product
 import datetime
 import timeit

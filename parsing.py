@@ -1,13 +1,15 @@
+"""~"""
+
 from collections import namedtuple, deque
 from pyparsing import Suppress, Word, Forward, Optional, ZeroOrMore, Literal
 from pysat.solvers import Solver
 from pysat.formula import IDPool
 from itertools import product
-from printing import out, print_cnf, var, one_hot
+from basics import out, print_cnf, var, one_hot
 from minmod import minimal
 
 
-Apply = namedtuple("Apply", ["op", "args"])  # function/relation applications
+Apply = namedtuple("Apply", ["op", "args"])  # function applications
 Var = namedtuple("Var", ["name"])  # variable nodes
 Const = namedtuple("Const", ["name"])  # constants
 Clause = namedtuple("Clause", ["literals"])
@@ -55,9 +57,6 @@ class Parser:
     def parse(self, string):
         """Parse the given string and return an AST."""
         return self.clauses.parse_string(string)[0]
-
-
-# example processing of the tree
 
 
 def collect(t, tp):
@@ -198,18 +197,12 @@ def ground(ids, cl, s):
 
 def testme(inp):
     """Test on string inp."""
-    print(inp)
     p = Parser()
 
     tree = p.parse(inp)
-    # print("Parsed tree:")
-    # print(tostr(tree))
-
     flattened = transform(tree)
-    # print("Flattened tree:")
-    # print(tostr(flattened))
 
-    s = 7
+    s = 6
     ids = IDPool()
     cnf = []
     for clause in flattened.clauses:
@@ -218,7 +211,6 @@ def testme(inp):
     constants = collect(flattened, Const)
     cnf += one_hot(ids, constants, s)
     cnf += minimal(ids, s, False)
-    # print_cnf(ids, cnf)
 
     solver = Solver(name="cd", bootstrap_with=cnf)
     counter = 0
@@ -228,12 +220,11 @@ def testme(inp):
         if solver.solve():
             model = solver.get_model()
             cl = out(ids, model, s)
-            # find a new model
-            solver.add_clause(cl)
+            solver.add_clause(cl)  # find a new model
         else:
             print("unsat")
             break
 
 
 if __name__ == "__main__":
-    testme("x*e=x. e*x=x. x*x'=e. x'*x=e. (x*y)*z=x*(y*z).")
+    testme("x*e=x. e*x=x. x*x'=e. x'*x=e. (x*y)*z=x*(y*z). c*d!=d*c.")
