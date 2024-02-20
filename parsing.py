@@ -1,11 +1,11 @@
-"""~"""
+"""Parse, flatten, ground and give models for a theory on input."""
 
 from collections import namedtuple, deque
 from pyparsing import Suppress, Word, Forward, Optional, ZeroOrMore, Literal
 from pysat.solvers import Solver
 from pysat.formula import IDPool
 from itertools import product
-from basics import out, print_cnf, var, one_hot
+from basics import out, var, one_hot
 from minmod import minimal
 
 
@@ -104,7 +104,7 @@ def get_terms(lit):
 
 
 def shallow(lit):
-    """Checks shallow literals of the form 2 from paradoxpaper."""
+    """Check shallow literals of the form 2 from paradoxpaper."""
     term1, term2 = get_terms(lit)
     if isinstance(term1, Var):
         if isinstance(term2, Const):
