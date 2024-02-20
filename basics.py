@@ -59,11 +59,11 @@ def out(ids, model, s):
 def var(ids, sign, op, args, d):
     """Return propositional variable for equality of terms."""
     if op == "*":
-        rv = ids.id(("*", tuple(args), d))
+        rv = ids.id(f"{args[0]}*{args[1]}={d}")
     if op == "_":  # constant
-        rv = ids.id(("_", tuple(args), d))
+        rv = ids.id(f"{args[0]}={d}")
     if op == "'":
-        rv = ids.id(("'", tuple(args), d))
+        rv = ids.id(f"{args[0]}'={d}")
     return rv if sign else -rv
 
 

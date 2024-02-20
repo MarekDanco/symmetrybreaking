@@ -217,13 +217,14 @@ def testme(inp):
     tree = p.parse(inp)
     flattened = transform(tree)
 
-    s = 8
+    s = 4
     ids = IDPool()
     cnf = []
     for clause in flattened.clauses:
         cnf += ground(ids, clause, s)
     if args.debug:
-        print_cnf(ids, cnf)
+        print(tostr(flattened))
+        # print_cnf(ids, cnf)
 
     constants = collect(flattened, Const)
     cnf += one_hot(ids, constants, s)
