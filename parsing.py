@@ -5,7 +5,7 @@ from pyparsing import Suppress, Word, Forward, Optional, ZeroOrMore, Literal
 from pysat.solvers import Solver
 from pysat.formula import IDPool
 from itertools import product
-from basics import out, var, one_hot
+from basics import out, var, one_hot, print_cnf
 from minmod import minimal
 import argparse
 
@@ -205,6 +205,12 @@ def testme(inp):
         help="encode minimality under all transpositions only",
         action="store_true",
     )
+    arg_parser.add_argument(
+        "-d",
+        "--debug",
+        help="print the encoded cnf",
+        action="store_true",
+    )
     args = arg_parser.parse_args()
     p = Parser()
 
@@ -216,6 +222,8 @@ def testme(inp):
     cnf = []
     for clause in flattened.clauses:
         cnf += ground(ids, clause, s)
+    if args.debug:
+        print_cnf(ids, cnf)
 
     constants = collect(flattened, Const)
     cnf += one_hot(ids, constants, s)
