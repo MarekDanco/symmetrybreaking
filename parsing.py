@@ -7,6 +7,7 @@ from pysat.formula import IDPool
 from itertools import product
 from basics import out, var, one_hot
 from minmod import minimal
+import argparse
 
 
 Apply = namedtuple("Apply", ["op", "args"])  # function applications
@@ -197,12 +198,20 @@ def ground(ids, cl, s):
 
 def testme(inp):
     """Test on string inp."""
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument(
+        "-t",
+        "--transpositions",
+        help="encode minimality under all transpositions only",
+        action="store_true",
+    )
+    args = arg_parser.parse_args()
     p = Parser()
 
     tree = p.parse(inp)
     flattened = transform(tree)
 
-    s = 6
+    s = 8
     ids = IDPool()
     cnf = []
     for clause in flattened.clauses:
@@ -210,7 +219,7 @@ def testme(inp):
 
     constants = collect(flattened, Const)
     cnf += one_hot(ids, constants, s)
-    cnf += minimal(ids, s, False)
+    cnf += minimal(ids, s, args.transpositions)
 
     solver = Solver(name="cd", bootstrap_with=cnf)
     counter = 0
