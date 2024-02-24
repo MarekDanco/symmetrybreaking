@@ -161,10 +161,7 @@ class Flattener:
                 term1, term2 = get_terms(top)
                 if isinstance(term1, Var):
                     x = self.rewrite(top, pos, count)
-                    if isinstance(x, Apply):
-                        q.append(x)
-                    else:
-                        q.extend(x)
+                    q.append(x) if isinstance(x, Apply) else q.extend(x)
                     count += 1
                 else:  # none of the terms is Var
                     v = get_var(pos, count)
@@ -226,5 +223,5 @@ def testme(inp):
 
 if __name__ == "__main__":
     testme("c*d!=d*c | c= x*y.")
-    testme("(x*y)*z=(x*y).")
+    testme("(x*y)*z=(x*y)*c.")
     testme("(x*y)*(x*y)=w.")
