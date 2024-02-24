@@ -167,6 +167,8 @@ class Flattener:
                     v = get_var(pos, count)
                     q.append(Apply(op=top.op, args=[v, term1]))
                     q.append(Apply(op="!=", args=[v, term2]))
+                    arg = Apply(op=term2.op, args=tuple(term2.args))
+                    self.rewritten_terms.update({arg: v})
                     count += 1
         return cl
 
@@ -223,5 +225,5 @@ def testme(inp):
 
 if __name__ == "__main__":
     testme("c*d!=d*c | c= x*y.")
-    testme("(x*y)*z=(x*y)*c.")
+    testme("(x*y)*z=(x*y).")
     testme("(x*y)*(x*y)=w.")
