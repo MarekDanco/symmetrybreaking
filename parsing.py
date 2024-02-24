@@ -1,13 +1,9 @@
-"""Parse, flatten, ground and give models for a theory on input."""
+"""Parse, flatten and ground input."""
 
 from collections import namedtuple, deque
 from pyparsing import Suppress, Word, Forward, Optional, ZeroOrMore, Literal
-from pysat.solvers import Solver
-from pysat.formula import IDPool
 from itertools import product
-from basics import out, var, one_hot, print_cnf
-from minmod import minimal
-import argparse
+from basics import var
 
 
 Apply = namedtuple("Apply", ["op", "args"])  # function applications
@@ -117,47 +113,65 @@ def shallow(lit):
     return False
 
 
-def sub(lit, i, pos, count):
-    """Rewrite subterm of literal with a variable."""
-    term1, term2 = get_terms(lit)
-    v = get_var(pos, count)
-    l1 = Apply(op="!=", args=[v, term2.args[i]])
-    term2.args[i] = v
-    l2 = Apply(op=lit.op, args=[term1, term2])
-    return l2, l1
-
-
 def var_first(lit):
-    """Transform a shallow literal on input to the form "Var=Term"."""
+    """Transform a shallow literal to the form "Var=Term"."""
     term1, term2 = get_terms(lit)
     return Apply(op=lit.op, args=[term1, term2])
 
 
-def flatten(lit, pos):
-    """Flatten a literal using stack."""
-    q = deque()
-    q.append(lit)
-    cl = Clause(literals=[])
-    count = 0  # counter for new variable index
-    while q:
-        top = q.pop()
-        if shallow(top):
-            top = var_first(top)
-            cl.literals.append(top)
-        else:
-            term1, term2 = get_terms(top)
-            if isinstance(term1, Var):
-                for i, arg in enumerate(term2.args):
-                    if not isinstance(arg, Var):
-                        q.extend(sub(top, i, pos, count))
-                        count += 1
-                        break
-            else:  # none of the terms is Var
-                v = get_var(pos, count)
-                q.append(Apply(op=top.op, args=[v, term1]))
-                q.append(Apply(op="!=", args=[v, term2]))
-                count += 1
-    return cl
+class Flattener:
+    def __init__(self):
+        self.rewritten_terms = dict()
+
+    def rewrite(self, lit, pos, count):
+        """Rewrite subterm of literal with a new variable."""
+        term1, term2 = get_terms(lit)
+        for i, arg in enumerate(term2.args):
+            if not isinstance(arg, Var):
+                if isinstance(arg, Apply):
+                    arg = Apply(
+                        op=arg.op, args=tuple(arg.args)
+                    )  # ensure hashable namedtuple
+                if arg in self.rewritten_terms:
+                    v = self.rewritten_terms[arg]
+                    term2.args[i] = v
+                    l = Apply(op=lit.op, args=[term1, term2])
+                    return l
+                else:
+                    v = get_var(pos, count)
+                    self.rewritten_terms.update({arg: v})
+                    l1 = Apply(op="!=", args=[v, term2.args[i]])
+                    term2.args[i] = v
+                    l2 = Apply(op=lit.op, args=[term1, term2])
+                    return l2, l1
+        assert False
+
+    def flatten(self, lit, pos):
+        """Flatten a literal using stack."""
+        q = deque()
+        q.append(lit)
+        cl = Clause(literals=[])
+        count = 0  # counter for new variable index
+        while q:
+            top = q.pop()
+            if shallow(top):
+                top = var_first(top)
+                cl.literals.append(top)
+            else:
+                term1, term2 = get_terms(top)
+                if isinstance(term1, Var):
+                    x = self.rewrite(top, pos, count)
+                    if isinstance(x, Apply):
+                        q.append(x)
+                    else:
+                        q.extend(x)
+                    count += 1
+                else:  # none of the terms is Var
+                    v = get_var(pos, count)
+                    q.append(Apply(op=top.op, args=[v, term1]))
+                    q.append(Apply(op="!=", args=[v, term2]))
+                    count += 1
+        return cl
 
 
 def transform(tree):
@@ -165,8 +179,9 @@ def transform(tree):
     flattened = CNF(clauses=[])
     for clause in tree.clauses:
         cl = Clause(literals=[])
+        f = Flattener()
         for j, lit in enumerate(clause.literals):
-            cl.literals.extend(flatten(lit, j).literals)
+            cl.literals.extend(f.flatten(lit, j).literals)
         flattened.clauses.append(cl)
     return flattened
 
@@ -197,52 +212,19 @@ def ground(ids, cl, s):
 
 
 def testme(inp):
-    """Test on string inp."""
-    arg_parser = argparse.ArgumentParser()
-    arg_parser.add_argument(
-        "-t",
-        "--transpositions",
-        help="encode minimality under all transpositions only",
-        action="store_true",
-    )
-    arg_parser.add_argument(
-        "-d",
-        "--debug",
-        help="print the encoded cnf",
-        action="store_true",
-    )
-    args = arg_parser.parse_args()
+    """Test the formula on input."""
     p = Parser()
-
     tree = p.parse(inp)
+
+    print("input:")
+    print(tostr(tree))
+
     flattened = transform(tree)
-
-    s = 4
-    ids = IDPool()
-    cnf = []
-    for clause in flattened.clauses:
-        cnf += ground(ids, clause, s)
-    if args.debug:
-        print(tostr(flattened))
-        # print_cnf(ids, cnf)
-
-    constants = collect(flattened, Const)
-    cnf += one_hot(ids, constants, s)
-    cnf += minimal(ids, s, args.transpositions)
-
-    solver = Solver(name="cd", bootstrap_with=cnf)
-    counter = 0
-    while True:
-        counter += 1
-        print("===", counter, flush=True)
-        if solver.solve():
-            model = solver.get_model()
-            cl = out(ids, model, s)
-            solver.add_clause(cl)  # find a new model
-        else:
-            print("unsat")
-            break
+    print("flattened:")
+    print(tostr(flattened))
 
 
 if __name__ == "__main__":
-    testme("x*e=x. e*x=x. x*x'=e. x'*x=e. (x*y)*z=x*(y*z). c*d!=d*c.")
+    testme("c*d!=d*c | c= x*y.")
+    testme("(x*y)*z=(x*y).")
+    testme("(x*y)*(x*y)=w.")

@@ -2,8 +2,7 @@
 
 from basics import var
 from itertools import permutations, product
-import datetime
-import timeit
+import time
 
 
 def inv(pi):
@@ -88,20 +87,6 @@ def transps(s):
     return tps
 
 
-class Timer:
-    """Measure time used."""
-
-    def __init__(self, round_ndigits: int = 0):
-        self._round_ndigits = round_ndigits
-        self._start_time = timeit.default_timer()
-
-    def __call__(self) -> float:
-        return timeit.default_timer() - self._start_time
-
-    def __str__(self) -> str:
-        return str(datetime.timedelta(seconds=round(self(), self._round_ndigits)))
-
-
 def minimal(ids, s, transpositions):
     """Compute CNF for lexicographically smallest model."""
     clauses = []
@@ -109,9 +94,6 @@ def minimal(ids, s, transpositions):
 
     perms = transps(s) if transpositions else permutations(rng)
     cells = [(x, y) for x in rng for y in rng]
-
-    print("encoding minimality to cnf")
-    timer = Timer()
     for pi in perms:
         # skip identity permutation
         if pi == tuple([i for i in rng]):
@@ -146,5 +128,4 @@ def minimal(ids, s, transpositions):
                 equal(ids, pi, [s - 1, s - 1]),
             ]
         ]
-    print(f"finished, time elapsed: {timer}")
     return clauses

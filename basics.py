@@ -11,7 +11,7 @@ def var2str(ids, var):
 
 def lit2str(ids, lit):
     """Print nicely a CNF literal."""
-    return ("-" if lit < 0 else "+") + "{" + var2str(ids, abs(lit)) + "}"
+    return ("-" if lit < 0 else "+") + "{" + "".join(var2str(ids, abs(lit))) + "}"
 
 
 def debug_model(ids, model, s):
@@ -42,17 +42,17 @@ def print_cnf(ids, cnf):
 
 
 def out(ids, model, s):
-    """Print the function table and return clause disallowing current model."""
+    """Print the function table and return a clause disallowing the current model."""
     cl = []
     rng = range(s)
 
-    for x in rng:
-        for y in rng:
-            for d in rng:
-                if model[var(ids, True, "*", [x, y], d) - 1] > 0:
-                    cl.append(-var(ids, True, "*", [x, y], d))
-                    print(d, end=" ", flush=True)
-        print()
+    for x, y in product(rng, repeat=2):
+        for d in rng:
+            if model[var(ids, True, "*", [x, y], d) - 1] > 0:
+                cl.append(-var(ids, True, "*", [x, y], d))
+                print(d, end=" ", flush=True)
+        if y == s - 1:
+            print()
     return cl
 
 
