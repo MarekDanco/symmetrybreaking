@@ -93,7 +93,7 @@ def get_var(pos, count):
 
 
 def get_terms(lit):
-    """Return terms of literal so that the first one is Var if possible."""
+    """Return terms of Apply so that the first one is Var if possible."""
     term1, term2 = lit.args
     if isinstance(term2, Var):
         term1, term2 = term2, term1
@@ -120,30 +120,22 @@ def var_first(lit):
 
 
 class Flattener:
+    """MACE like flattening."""
+
     def __init__(self):
-        self.rewritten_terms = dict()
+        self.rewritten_constants = dict()
 
     def rewrite(self, lit, pos, count):
         """Rewrite subterm of literal with a new variable."""
         term1, term2 = get_terms(lit)
         for i, arg in enumerate(term2.args):
             if not isinstance(arg, Var):
-                if isinstance(arg, Apply):
-                    arg = Apply(
-                        op=arg.op, args=tuple(arg.args)
-                    )  # ensure hashable namedtuple
-                if arg in self.rewritten_terms:
-                    v = self.rewritten_terms[arg]
-                    term2.args[i] = v
-                    l = Apply(op=lit.op, args=[term1, term2])
-                    return l
-                else:
-                    v = get_var(pos, count)
-                    self.rewritten_terms.update({arg: v})
-                    l1 = Apply(op="!=", args=[v, term2.args[i]])
-                    term2.args[i] = v
-                    l2 = Apply(op=lit.op, args=[term1, term2])
-                    return l2, l1
+                v = get_var(pos, count)
+                l1 = Apply(op="!=", args=[v, term2.args[i]])
+                term2.args[i] = v
+                l2 = Apply(op=lit.op, args=[term1, term2])
+                return l2, l1
+        print(lit, type(lit).__name__)
         assert False
 
     def flatten(self, lit, pos):
@@ -160,15 +152,12 @@ class Flattener:
             else:
                 term1, term2 = get_terms(top)
                 if isinstance(term1, Var):
-                    x = self.rewrite(top, pos, count)
-                    q.append(x) if isinstance(x, Apply) else q.extend(x)
+                    q.extend(self.rewrite(top, pos, count))
                     count += 1
                 else:  # none of the terms is Var
                     v = get_var(pos, count)
                     q.append(Apply(op=top.op, args=[v, term1]))
                     q.append(Apply(op="!=", args=[v, term2]))
-                    arg = Apply(op=term2.op, args=tuple(term2.args))
-                    self.rewritten_terms.update({arg: v})
                     count += 1
         return cl
 
@@ -224,6 +213,7 @@ def testme(inp):
 
 
 if __name__ == "__main__":
-    testme("c*d!=d*c | c= x*y.")
+    testme("c*d!=d*c.")
     testme("(x*y)*z=(x*y).")
     testme("(x*y)*(x*y)=w.")
+    testme("(x*y)*z=x*((y*y)*z).")
