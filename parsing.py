@@ -123,18 +123,26 @@ class Flattener:
     """MACE like flattening."""
 
     def __init__(self):
-        self.rewritten_constants = dict()
+        self.rewritten_terms = dict()
 
     def rewrite(self, lit, pos, count):
         """Rewrite subterm of literal with a new variable."""
         term1, term2 = get_terms(lit)
         for i, arg in enumerate(term2.args):
             if not isinstance(arg, Var):
-                v = get_var(pos, count)
-                l1 = Apply(op="!=", args=[v, term2.args[i]])
-                term2.args[i] = v
-                l2 = Apply(op=lit.op, args=[term1, term2])
-                return l2, l1
+                hs = tostr(arg)
+                if hs in self.rewritten_terms:
+                    v = self.rewritten_terms[hs]
+                    term2.args[i] = v
+                    l = Apply(op=lit.op, args=[term1, term2])
+                    return l
+                else:
+                    v = get_var(pos, count)
+                    l1 = Apply(op="!=", args=[v, term2.args[i]])
+                    self.rewritten_terms.update({hs: v})
+                    term2.args[i] = v
+                    l2 = Apply(op=lit.op, args=[term1, term2])
+                    return l2, l1
         print(lit, type(lit).__name__)
         assert False
 
@@ -152,12 +160,14 @@ class Flattener:
             else:
                 term1, term2 = get_terms(top)
                 if isinstance(term1, Var):
-                    q.extend(self.rewrite(top, pos, count))
+                    x = self.rewrite(top, pos, count)
+                    q.append(x) if isinstance(x, Apply) else q.extend(x)
                     count += 1
                 else:  # none of the terms is Var
                     v = get_var(pos, count)
                     q.append(Apply(op=top.op, args=[v, term1]))
                     q.append(Apply(op="!=", args=[v, term2]))
+                    self.rewritten_terms.update({tostr(term2): v})
                     count += 1
         return cl
 
@@ -209,11 +219,11 @@ def testme(inp):
 
     flattened = transform(tree)
     print("flattened:")
-    print(tostr(flattened))
+    print(f"{tostr(flattened)}\n")
 
 
 if __name__ == "__main__":
     testme("c*d!=d*c.")
     testme("(x*y)*z=(x*y).")
     testme("(x*y)*(x*y)=w.")
-    testme("(x*y)*z=x*((y*y)*z).")
+    testme("(x*y)*z=x*((x*y)*z).")
