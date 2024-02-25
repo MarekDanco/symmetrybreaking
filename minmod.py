@@ -2,7 +2,6 @@
 
 from basics import var
 from itertools import permutations, product
-import time
 
 
 def inv(pi):

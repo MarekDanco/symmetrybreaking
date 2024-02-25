@@ -24,12 +24,21 @@ def testme(inp):
         action="store_true",
     )
     args = arg_parser.parse_args()
+
     p = Parser()
-
+    print("parsing: ", end="", flush=True)
+    start = time.perf_counter()
     tree = p.parse(inp)
-    flattened = transform(tree)
+    end = time.perf_counter()
+    print(f"{(end - start):.5f} seconds")
 
-    s = 6
+    print("flattening: ", end="", flush=True)
+    start = time.perf_counter()
+    flattened = transform(tree)
+    end = time.perf_counter()
+    print(f"{(end - start):.5f} seconds")
+
+    s = 8
     ids = IDPool()
     cnf = []
 
@@ -46,7 +55,11 @@ def testme(inp):
         print_cnf(ids, cnf)
 
     constants = collect(flattened, Const)
+    print("1-hot: ", end="", flush=True)
+    start = time.perf_counter()
     cnf += one_hot(ids, constants, s)
+    end = time.perf_counter()
+    print(f"{(end - start):.5f} seconds")
 
     print("minimality: ", end="", flush=True)
     start = time.perf_counter()
