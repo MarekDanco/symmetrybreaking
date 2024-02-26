@@ -124,8 +124,15 @@ class Flattener:
 
     def __init__(self):
         self.rewritten_terms = dict()
+        self.var_index = 0
 
-    def rewrite(self, lit, pos, count):
+    def update_atrbs(self, pos, index, hs):
+        v = get_var(pos, index)
+        self.var_index += 1
+        self.rewritten_terms.update({hs: v})
+        return v
+
+    def rewrite(self, lit, pos, index):
         """Rewrite subterm of literal with a new variable."""
         term1, term2 = get_terms(lit)
         for i, arg in enumerate(term2.args):
@@ -137,9 +144,8 @@ class Flattener:
                     l = Apply(op=lit.op, args=[term1, term2])
                     return l
                 else:
-                    v = get_var(pos, count)
+                    v = self.update_atrbs(pos, index, hs)
                     l1 = Apply(op="!=", args=[v, term2.args[i]])
-                    self.rewritten_terms.update({hs: v})
                     term2.args[i] = v
                     l2 = Apply(op=lit.op, args=[term1, term2])
                     return l2, l1
@@ -151,7 +157,6 @@ class Flattener:
         q = deque()
         q.append(lit)
         cl = Clause(literals=[])
-        count = 0  # counter for new variable index
         while q:
             top = q.pop()
             if shallow(top):
@@ -160,15 +165,12 @@ class Flattener:
             else:
                 term1, term2 = get_terms(top)
                 if isinstance(term1, Var):
-                    x = self.rewrite(top, pos, count)
+                    x = self.rewrite(top, pos, self.var_index)
                     q.append(x) if isinstance(x, Apply) else q.extend(x)
-                    count += 1
                 else:  # none of the terms is Var
-                    v = get_var(pos, count)
+                    v = self.update_atrbs(pos, self.var_index, tostr(term2))
                     q.append(Apply(op=top.op, args=[v, term1]))
                     q.append(Apply(op="!=", args=[v, term2]))
-                    self.rewritten_terms.update({tostr(term2): v})
-                    count += 1
         return cl
 
 
@@ -184,6 +186,20 @@ def transform(tree):
     return flattened
 
 
+def get_prms(tup, lit, names):
+    """Get parameters for a propositional variable."""
+    sign = True if lit.op == "=" else False
+    d = tup[names[lit.args[0].name]]  # first arg in equality is always Var
+    func = lit.args[1]  # second is always Term
+    if isinstance(func, Const):
+        op = "_"
+        args = [func.name]
+    if isinstance(func, Apply):
+        op = func.op
+        args = [tup[names[arg.name]] for arg in func.args]
+    return sign, op, args, d
+
+
 def ground(ids, cl, s):
     """Ground a clause with elements of domain of size s."""
     clauses = []
@@ -195,15 +211,7 @@ def ground(ids, cl, s):
     for tup in product(range(s), repeat=rep):
         gr = []  # grounding for current tuple
         for lit in cl.literals:
-            sign = True if lit.op == "=" else False
-            d = tup[names[lit.args[0].name]]  # first arg in equality is always Var
-            func = lit.args[1]  # second is always Term
-            if isinstance(func, Const):
-                op = "_"
-                args = [func.name]
-            if isinstance(func, Apply):
-                op = func.op
-                args = [tup[names[arg.name]] for arg in func.args]
+            sign, op, args, d = get_prms(tup, lit, names)
             gr.append(var(ids, sign, op, args, d))
         clauses += [gr]
     return clauses
@@ -224,6 +232,5 @@ def testme(inp):
 
 if __name__ == "__main__":
     testme("c*d!=d*c.")
-    testme("(x*y)*z=(x*y).")
     testme("(x*y)*(x*y)=w.")
-    testme("(x*y)*z=x*((x*y)*z).")
+    testme("d*e=d*x | e*x=d*w.")

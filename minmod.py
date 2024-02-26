@@ -1,4 +1,4 @@
-"""Functions for encoding the lexicographically minimal model into cnf."""
+"""Functions for encoding model minimality with respect to some ordering."""
 
 from basics import var
 from itertools import permutations, product
@@ -33,12 +33,12 @@ def equal(ids, pi, cell):
 
 
 def sub_l(ids, pi, cell, s):
-    """Substitute "cell is less than inv(cell)" constraint with a variable."""
+    """Substitute "cell is less than pi(inv(cell))" constraint with a variable."""
     clauses = []
-    less_subclause = -less(ids, pi, cell)
+    l = -less(ids, pi, cell)
     inverse = inv(pi)
     clauses += [
-        [less_subclause, var(ids, False, "*", cell, d)]
+        [l, var(ids, False, "*", cell, d)]
         + [
             var(ids, True, "*", [inverse[arg] for arg in cell], d2)
             for d2 in larger_set(pi, d, s)
@@ -49,7 +49,7 @@ def sub_l(ids, pi, cell, s):
 
 
 def sub_e(ids, pi, cell, s):
-    """Substitute "cell and inv(cell) are equal" constraint with a variable."""
+    """Substitute "cell and pi(inv(cell)) are equal" constraint with a variable."""
     clauses = []
     e = -equal(ids, pi, cell)
     inverse = inv(pi)
@@ -86,13 +86,16 @@ def transps(s):
     return tps
 
 
-def minimal(ids, s, transpositions):
-    """Compute CNF for lexicographically smallest model."""
+def minimal(ids, s, transpositions, concentric):
+    """Compute CNF for minimal model."""
     clauses = []
     rng = range(s)
 
     perms = transps(s) if transpositions else permutations(rng)
     cells = [(x, y) for x in rng for y in rng]
+    if concentric:
+        cells.sort(key=lambda e: max(e[0], e[1]))
+
     for pi in perms:
         # skip identity permutation
         if pi == tuple([i for i in rng]):
@@ -108,13 +111,11 @@ def minimal(ids, s, transpositions):
             [less(ids, pi, [0, 0]), relax(ids, pi, 0)],
         ]
 
-        i = -1
-        for cell in cells:
-            i += 1
+        for i, cell in enumerate(cells):
             if cell == (0, 0) or cell == (s - 1, s - 1):
                 continue
 
-            r = -relax(ids, pi, i - 1)
+            r = -relax(ids, pi, i - 1)  # relaxation variable from the previous cell
             l = less(ids, pi, cell)
             e = equal(ids, pi, cell)
             clauses += [[r, l, e], [r, l, relax(ids, pi, i)]]

@@ -1,12 +1,12 @@
-"""Find models for FOL formulas using MACE"""
+"""Find models for an algebra using MACE."""
 
 import argparse
 import time
 from pysat.solvers import Solver
 from pysat.formula import IDPool
-from parsing import Parser, transform, ground, tostr, Const, collect
+from parsing import Parser, transform, ground, Const, collect
 from minmod import minimal
-from basics import one_hot, out, print_cnf
+from basics import one_hot, out
 
 
 def testme(inp):
@@ -18,10 +18,10 @@ def testme(inp):
         action="store_false",
     )
     arg_parser.add_argument(
-        "-d",
-        "--debug",
-        help="print the encoded cnf",
-        action="store_true",
+        "-c",
+        "--concentric",
+        help="encode minimality with respect to concentric ordering",
+        action="store_false",
     )
     args = arg_parser.parse_args()
 
@@ -49,11 +49,6 @@ def testme(inp):
     end = time.perf_counter()
     print(f"{(end - start):.5f} seconds")
 
-    if args.debug:
-        print("parsed clauses after flattening:")
-        print(tostr(flattened))
-        print_cnf(ids, cnf)
-
     constants = collect(flattened, Const)
     print("1-hot: ", end="", flush=True)
     start = time.perf_counter()
@@ -63,7 +58,7 @@ def testme(inp):
 
     print("minimality: ", end="", flush=True)
     start = time.perf_counter()
-    cnf += minimal(ids, s, args.permutations)
+    cnf += minimal(ids, s, args.permutations, args.concentric)
     end = time.perf_counter()
     print(f"{(end - start):.5f} seconds")
 
