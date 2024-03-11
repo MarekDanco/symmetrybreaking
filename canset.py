@@ -137,4 +137,4 @@ def testme(s):
 
 
 if __name__ == "__main__":
-    testme(4)
+    testme(3)
