@@ -3,6 +3,7 @@
 from pysat.solvers import Solver
 from pysat.formula import IDPool
 from basics import pick_one, print_cnf, debug_model
+from minmod import larger_set, inv
 from itertools import product
 
 
@@ -91,8 +92,8 @@ def grtr(ids, cell):
     return ids.id(f"grtr_{cell}")
 
 
-def eql(ids, cell):
-    return ids.id(f"eql_{cell}")
+def eql_grtr(ids, cell):
+    return ids.id(f"eqlg_{cell}")
 
 
 def sub_grtr(ids, cell, s):
@@ -106,9 +107,9 @@ def sub_grtr(ids, cell, s):
     return clauses
 
 
-def sub_eql(ids, cell, s):
+def sub_eql_grtr(ids, cell, s):
     clauses = []
-    eq = -eql(ids, cell)
+    eq = -eql_grtr(ids, cell)
     clauses += [
         [eq, var(ids, False, "a", cell, d), var(ids, True, "b", cell, d)]
         for d in range(s)
@@ -128,10 +129,10 @@ def greater(ids, s):
 
     for cell in cells:
         clauses += sub_grtr(ids, cell, s)
-        clauses += sub_eql(ids, cell, s)
+        clauses += sub_eql_grtr(ids, cell, s)
 
     clauses += [
-        [grtr(ids, [0, 0]), eql(ids, [0, 0])],
+        [grtr(ids, [0, 0]), eql_grtr(ids, [0, 0])],
         [grtr(ids, [0, 0]), r_grtr(ids, 0)],
     ]
 
@@ -140,7 +141,7 @@ def greater(ids, s):
             continue
         r = -r_grtr(ids, i - 1)
         g = grtr(ids, cell)
-        e = eql(ids, cell)
+        e = eql_grtr(ids, cell)
 
         clauses += [[r, g, e], [r, g, r_grtr(ids, i)]]
 
@@ -148,15 +149,92 @@ def greater(ids, s):
     return clauses
 
 
-def r_min():
+def r_min(ids, pi, i):
     """Variable for "following cells are less than or equal" in A <= pi(A) constraints."""
-    return
+    return ids.id(f"r_{pi}_{i}")
+
+
+def less(ids, pi, cell):
+    return ids.id(f"less_{pi}_{cell}")
+
+
+def eql_min(ids, pi, cell):
+    return ids.id(f"eqlm_{pi}_{cell}")
+
+
+def sub_less(ids, pi, cell, s):
+    """Substitute "cell is less than pi(inv(cell))" constraint with a variable."""
+    clauses = []
+    l = -less(ids, pi, cell)
+    inverse = inv(pi)
+    clauses += [
+        [l, var(ids, False, "a", cell, d)]
+        + [
+            var(ids, True, "a", [inverse[arg] for arg in cell], d2)
+            for d2 in larger_set(pi, d, s)
+        ]
+        for d in range(s)
+    ]
+    return clauses
+
+
+def sub_eql_min(ids, pi, cell, s):
+    """Substitute "cell and pi(inv(cell)) are equal" constraint with a variable."""
+    clauses = []
+    e = -eql_min(ids, pi, cell)
+    inverse = inv(pi)
+    clauses += [
+        [
+            e,
+            var(ids, False, "a", cell, d),
+            var(ids, True, "a", [inverse[arg] for arg in cell], inverse[d]),
+        ]
+        for d in range(s)
+    ]
+    clauses += [
+        [
+            e,
+            var(ids, True, "a", cell, d),
+            var(ids, False, "a", [inverse[arg] for arg in cell], inverse[d]),
+        ]
+        for d in range(s)
+    ]
+
+    return clauses
 
 
 def minimality(ids, s, pi):
     """Constraints for A <= pi(A)."""
     clauses = []
+    rng = range(s)
+    cells = [[x, y] for x in rng for y in rng]
 
+    for cell in product(rng, repeat=2):
+        clauses += sub_less(ids, pi, cell, s)
+        clauses += sub_eql_min(ids, pi, cell, s)
+
+    clauses += [
+        [less(ids, pi, [0, 0]), eql_min(ids, pi, [0, 0])],
+        [less(ids, pi, [0, 0]), r_min(ids, pi, 0)],
+    ]
+
+    for i, cell in enumerate(cells):
+        if i in [0, s**2 - 1]:
+            continue
+
+        r = -r_min(ids, pi, i - 1)  # relaxation variable from the previous cell
+        l = less(ids, pi, cell)
+        e = eql_min(ids, pi, cell)
+        clauses += [[r, l, e], [r, l, r_min(ids, pi, i)]]
+
+    # constraints for the last cell
+    clauses += [
+        [
+            -r_min(ids, pi, s**2 - 2),
+            less(ids, pi, [s - 1, s - 1]),
+            eql_min(ids, pi, [s - 1, s - 1]),
+        ]
+    ]
     return clauses
 
 
@@ -193,7 +271,7 @@ def testme(s):
                 prm.append(d)
         print(prm, "\n=====")
         solver.add_clause(cl)
-        # solver.append_formula(minimality(ids, s, prm))
+        solver.append_formula(minimality(ids, s, prm))
         perms += [prm]
     print(len(perms))
 
