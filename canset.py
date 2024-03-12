@@ -33,7 +33,7 @@ def rhs(ids, *args):
 
 
 def sub_rhs(ids, s):
-    """Substitute formula on the right-hand side of iso formula with a variable."""
+    """Substitute the conjunct on the right-hand side of iso formula with a variable."""
     clauses = []
     for x, i, j, y, k, l in product(range(s), repeat=6):
         clauses += [
@@ -82,14 +82,82 @@ def iso(ids, s):
     return clauses
 
 
-"""
+def r_grtr(ids, i):
+    """Variable for "following cells are greater" in A>B constraints."""
+    return ids.id(f"r_{i}")
+
+
+def grtr(ids, cell):
+    return ids.id(f"grtr_{cell}")
+
+
+def eql(ids, cell):
+    return ids.id(f"eql_{cell}")
+
+
+def sub_grtr(ids, cell, s):
+    clauses = []
+    grt = -grtr(ids, cell)
+    clauses += [
+        [grt, var(ids, False, "a", cell, d)]
+        + [var(ids, True, "b", cell, d2) for d2 in range(d)]
+        for d in range(s)
+    ]
+    return clauses
+
+
+def sub_eql(ids, cell, s):
+    clauses = []
+    eq = -eql(ids, cell)
+    clauses += [
+        [eq, var(ids, False, "a", cell, d), var(ids, True, "b", cell, d)]
+        for d in range(s)
+    ]
+    clauses += [
+        [eq, var(ids, True, "a", cell, d), var(ids, False, "b", cell, d)]
+        for d in range(s)
+    ]
+    return clauses
+
+
 def greater(ids, s):
+    """Constraints for A>B."""
     clauses = []
     rng = range(s)
-    for x, i, j in product(rng, repeat=3):
-        
+    cells = [[x, y] for x in rng for y in rng]
+
+    for cell in cells:
+        clauses += sub_grtr(ids, cell, s)
+        clauses += sub_eql(ids, cell, s)
+
+    clauses += [
+        [grtr(ids, [0, 0]), eql(ids, [0, 0])],
+        [grtr(ids, [0, 0]), r_grtr(ids, 0)],
+    ]
+
+    for i, cell in enumerate(cells):
+        if i in [0, s**2 - 1]:
+            continue
+        r = -r_grtr(ids, i - 1)
+        g = grtr(ids, cell)
+        e = eql(ids, cell)
+
+        clauses += [[r, g, e], [r, g, r_grtr(ids, i)]]
+
+    clauses += [[-r_grtr(ids, s**2 - 2), grtr(ids, [s - 1, s - 1])]]
     return clauses
-"""
+
+
+def r_min():
+    """Variable for "following cells are less than or equal" in A <= pi(A) constraints."""
+    return
+
+
+def minimality(ids, s, pi):
+    """Constraints for A <= pi(A)."""
+    clauses = []
+
+    return clauses
 
 
 def print_table(ids, model, alg, s):
@@ -102,19 +170,13 @@ def print_table(ids, model, alg, s):
     print()
 
 
-def minimality(ids, s, pi):
-    """Constraints for canonizing permutation set."""
-    clauses = []
-    return clauses
-
-
 def testme(s):
     ids = IDPool()
     cnf = []
 
     cnf += perm(ids, s)
     cnf += iso(ids, s)
-    # cnf += greater(ids, s)
+    cnf += greater(ids, s)
 
     solver = Solver(name="lgl", bootstrap_with=cnf)
 
@@ -129,7 +191,7 @@ def testme(s):
             if model[var(ids, True, "pi", i, d) - 1] > 0:
                 cl.append(var(ids, False, "pi", i, d))
                 prm.append(d)
-        print(prm, "\n")
+        print(prm, "\n=====")
         solver.add_clause(cl)
         # solver.append_formula(minimality(ids, s, prm))
         perms += [prm]
@@ -137,4 +199,4 @@ def testme(s):
 
 
 if __name__ == "__main__":
-    testme(3)
+    testme(4)
