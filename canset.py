@@ -14,7 +14,7 @@ def var(ids, sign, op, args, d):
 
 
 def perm(ids, s):
-    """CNF encoding for a permutation."""
+    """CNF encoding of a permutation."""
     rng = range(s)
     clauses = []
     for i in rng:
@@ -64,7 +64,7 @@ def one_hot(ids, s, alg):
 
 
 def iso(ids, s):
-    """Constraints for isomorphism of algebras."""
+    """Constraints for isomorphism of magmas."""
     rng = range(s)
     clauses = sub_rhs(ids, s)
     clauses += one_hot(ids, s, "a")
@@ -131,6 +131,7 @@ def greater(ids, s):
         clauses += sub_grtr(ids, cell, s)
         clauses += sub_eql_grtr(ids, cell, s)
 
+    # constraints for the first cell
     clauses += [
         [grtr(ids, [0, 0]), eql_grtr(ids, [0, 0])],
         [grtr(ids, [0, 0]), r_grtr(ids, 0)],
@@ -139,12 +140,13 @@ def greater(ids, s):
     for i, cell in enumerate(cells):
         if i in [0, s**2 - 1]:
             continue
-        r = -r_grtr(ids, i - 1)
+        r = -r_grtr(ids, i - 1)  # relaxation variable from the previous cell
         g = grtr(ids, cell)
         e = eql_grtr(ids, cell)
 
         clauses += [[r, g, e], [r, g, r_grtr(ids, i)]]
 
+    # constraints for the last cell
     clauses += [[-r_grtr(ids, s**2 - 2), grtr(ids, [s - 1, s - 1])]]
     return clauses
 
@@ -213,6 +215,7 @@ def minimality(ids, s, pi):
         clauses += sub_less(ids, pi, cell, s)
         clauses += sub_eql_min(ids, pi, cell, s)
 
+    # constraints for the first cell
     clauses += [
         [less(ids, pi, [0, 0]), eql_min(ids, pi, [0, 0])],
         [less(ids, pi, [0, 0]), r_min(ids, pi, 0)],
@@ -248,7 +251,7 @@ def print_table(ids, model, alg, s):
     print()
 
 
-def testme(s):
+def alg1(s):
     ids = IDPool()
     cnf = []
 
@@ -273,8 +276,28 @@ def testme(s):
         solver.add_clause(cl)
         solver.append_formula(minimality(ids, s, prm))
         perms += [prm]
-    print(len(perms))
+
+    print(f"Size of the canonizing set: {len(perms)}")
+    return perms
+
+
+def alg2(s, p):
+    ids = IDPool()
+    cnf = []
+    p_reduce = list(p)
+    for perm in p:
+        pi = p_reduce.pop(p_reduce.index(perm))
+        for perm2 in p_reduce:
+            cnf += minimality(ids, s, perm2)
+        # todo A>pi(A) constraint
+        solver = Solver(name="lgl", bootstrap_with=cnf)
+        if solver.solve():
+            p_reduce.append(pi)  # pi is not redundant
+
+    return p_reduce
 
 
 if __name__ == "__main__":
-    testme(4)
+    s = 4
+    p = alg1(s)
+    alg2(s, p)
