@@ -1,4 +1,4 @@
-"""Compute the instance-independent canonizing set of permutations."""
+"""Compute the reduced instance-independent canonizing set of permutations."""
 
 from pysat.solvers import Solver
 from pysat.formula import IDPool
@@ -276,28 +276,78 @@ def alg1(s):
         solver.add_clause(cl)
         solver.append_formula(minimality(ids, s, prm))
         perms += [prm]
-
-    print(f"Size of the canonizing set: {len(perms)}")
     return perms
+
+
+def smaller_set(pi, d, s):
+    """Return the set of values smaller than d under permutation pi."""
+    return {i for i in range(s) if pi[i] < d}
+
+
+def sub_grtr2(ids, pi, cell, s):
+    clauses = []
+    grt = -grtr(ids, cell)
+    inverse = inv(pi)
+    clauses += [
+        [grt, var(ids, False, "a", cell, d)]
+        + [
+            var(ids, True, "a", [inverse[arg] for arg in cell], d2)
+            for d2 in smaller_set(pi, d, s)
+        ]
+        for d in range(s)
+    ]
+    return clauses
+
+
+def greater2(ids, s, pi):
+    """Constraints for A>pi(A)."""
+    clauses = []
+    rng = range(s)
+    cells = [[x, y] for x in rng for y in rng]
+
+    for cell in cells:
+        clauses += sub_grtr2(ids, pi, cell, s)
+        clauses += sub_eql_min(ids, pi, cell, s)
+
+    # constraints for the first cell
+    clauses += [
+        [grtr(ids, [0, 0]), eql_min(ids, pi, [0, 0])],
+        [grtr(ids, [0, 0]), r_grtr(ids, 0)],
+    ]
+
+    for i, cell in enumerate(cells):
+        if i in [0, s**2 - 1]:
+            continue
+        r = -r_grtr(ids, i - 1)  # relaxation variable from the previous cell
+        g = grtr(ids, cell)
+        e = eql_min(ids, pi, cell)
+
+        clauses += [[r, g, e], [r, g, r_grtr(ids, i)]]
+
+    # constraints for the last cell
+    clauses += [[-r_grtr(ids, s**2 - 2), grtr(ids, [s - 1, s - 1])]]
+    return clauses
 
 
 def alg2(s, p):
     ids = IDPool()
-    cnf = []
     p_reduce = list(p)
     for perm in p:
+        print(".", end="", flush=True)
         pi = p_reduce.pop(p_reduce.index(perm))
+        cnf = one_hot(ids, s, "a")
         for perm2 in p_reduce:
             cnf += minimality(ids, s, perm2)
-        # todo A>pi(A) constraint
+        cnf += greater2(ids, s, pi)
         solver = Solver(name="lgl", bootstrap_with=cnf)
         if solver.solve():
             p_reduce.append(pi)  # pi is not redundant
-
     return p_reduce
 
 
 if __name__ == "__main__":
-    s = 4
+    s = 5
     p = alg1(s)
-    alg2(s, p)
+    print(f"Size of the canonizing set: {len(p)}")
+    p2 = alg2(s, p)
+    print(f"\nSize of the reduced canonizing set: {len(p2)}")
