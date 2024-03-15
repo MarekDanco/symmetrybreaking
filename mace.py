@@ -79,4 +79,3 @@ def testme(inp):
 
 if __name__ == "__main__":
     testme("c*d!=d*c. x*e=x. e*x=x. x*x'=e. x'*x=e. (x*y)*z=x*(y*z).")
-    testme("x*e=x. e*x=x. x*x'=e. x'*x=e. (x*y)*z=x*(y*z). c*d!=d*c.")
