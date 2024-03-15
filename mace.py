@@ -31,6 +31,8 @@ def testme(inp):
     tree = p.parse(inp)
     end = time.perf_counter()
     print(f"{(end - start):.5f} seconds")
+    constants = collect(tree, Const)
+    print(constants)
 
     print("flattening: ", end="", flush=True)
     start = time.perf_counter()
@@ -49,13 +51,11 @@ def testme(inp):
     end = time.perf_counter()
     print(f"{(end - start):.5f} seconds")
 
-    constants = collect(flattened, Const)
     print("1-hot: ", end="", flush=True)
     start = time.perf_counter()
     cnf += one_hot(ids, constants, s)
     end = time.perf_counter()
     print(f"{(end - start):.5f} seconds")
-
     print("minimality: ", end="", flush=True)
     start = time.perf_counter()
     cnf += minimal(ids, s, args.permutations, args.concentric, constants)
