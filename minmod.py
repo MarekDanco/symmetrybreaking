@@ -86,7 +86,14 @@ def transps(s):
     return tps
 
 
-def minimal(ids, s, transpositions, concentric):
+def lnh(ids, s, constants):
+    clauses = []
+    for i, c in enumerate(constants):
+        clauses += [[var(ids, True, "_", [c.name], d) for d in range(i + 1)]]
+    return clauses
+
+
+def minimal(ids, s, transpositions, concentric, constants):
     """Compute CNF for minimal model."""
     clauses = []
     rng = range(s)
@@ -95,6 +102,9 @@ def minimal(ids, s, transpositions, concentric):
     cells = [(x, y) for x in rng for y in rng]
     if concentric:
         cells.sort(key=lambda e: max(e[0], e[1]))
+
+    if concentric and transpositions:
+        clauses += lnh(ids, s, constants)
 
     for pi in perms:
         # skip identity permutation
@@ -112,7 +122,7 @@ def minimal(ids, s, transpositions, concentric):
         ]
 
         for i, cell in enumerate(cells):
-            if cell == (0, 0) or cell == (s - 1, s - 1):
+            if i in [0, s**2 - 1]:
                 continue
 
             r = -relax(ids, pi, i - 1)  # relaxation variable from the previous cell

@@ -42,14 +42,14 @@ def print_cnf(ids, cnf):
 
 
 def out(ids, model, s):
-    """Print the function table and return a clause disallowing the current model."""
+    """Print the function table and return a clause blocking the current model."""
     cl = []
     rng = range(s)
 
     for x, y in product(rng, repeat=2):
         for d in rng:
             if model[var(ids, True, "*", [x, y], d) - 1] > 0:
-                cl.append(-var(ids, True, "*", [x, y], d))
+                cl.append(var(ids, False, "*", [x, y], d))
                 print(d, end=" ", flush=True)
         if y == s - 1:
             print()

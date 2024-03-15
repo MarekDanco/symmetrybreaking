@@ -21,7 +21,7 @@ def testme(inp):
         "-c",
         "--concentric",
         help="encode minimality with respect to concentric ordering",
-        action="store_false",
+        action="store_true",
     )
     args = arg_parser.parse_args()
 
@@ -38,7 +38,7 @@ def testme(inp):
     end = time.perf_counter()
     print(f"{(end - start):.5f} seconds")
 
-    s = 8
+    s = 6
     ids = IDPool()
     cnf = []
 
@@ -58,11 +58,11 @@ def testme(inp):
 
     print("minimality: ", end="", flush=True)
     start = time.perf_counter()
-    cnf += minimal(ids, s, args.permutations, args.concentric)
+    cnf += minimal(ids, s, args.permutations, args.concentric, constants)
     end = time.perf_counter()
     print(f"{(end - start):.5f} seconds")
 
-    solver = Solver(name="cd", bootstrap_with=cnf)
+    solver = Solver(name="lgl", bootstrap_with=cnf)
     counter = 0
     while True:
         counter += 1
@@ -73,8 +73,10 @@ def testme(inp):
             solver.add_clause(cl)  # find a new model
         else:
             print("unsat")
+            print("===")
             break
 
 
 if __name__ == "__main__":
+    testme("c*d!=d*c. x*e=x. e*x=x. x*x'=e. x'*x=e. (x*y)*z=x*(y*z).")
     testme("x*e=x. e*x=x. x*x'=e. x'*x=e. (x*y)*z=x*(y*z). c*d!=d*c.")
