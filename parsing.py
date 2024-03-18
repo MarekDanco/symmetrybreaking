@@ -106,11 +106,24 @@ def shallow(lit):
     if isinstance(term1, Var):
         if isinstance(term2, Const):
             return True
-        for arg in term2.args:
-            if not isinstance(arg, Var):
-                return False
-        return True
+        if isinstance(term2, Apply):
+            for arg in term2.args:
+                if not isinstance(arg, Var):
+                    return False
+            return True
     return False
+
+
+def shallow3(lit):
+    """Check shallow literals of the form 3 from paradoxpaper.
+    Return values = 2 -> possibly form 2, 1 -> x!=y, 3 -> form 3."""
+    term1, term2 = get_terms(lit)
+    if isinstance(term1, Var):
+        if isinstance(term2, Var):
+            if lit.op == "=":
+                return 3
+            return 1
+    return 2
 
 
 def var_first(lit):
@@ -120,7 +133,7 @@ def var_first(lit):
 
 
 class Flattener:
-    """MACE like flattening."""
+    """MACE like flattening for shallow literals of the form 2."""
 
     def __init__(self):
         self.rewritten_terms = dict()
@@ -137,14 +150,14 @@ class Flattener:
         term1, term2 = get_terms(lit)
         for i, arg in enumerate(term2.args):
             if not isinstance(arg, Var):
-                hs = tostr(arg)
-                if hs in self.rewritten_terms:
-                    v = self.rewritten_terms[hs]
+                arg_hash = tostr(arg)
+                if arg_hash in self.rewritten_terms:
+                    v = self.rewritten_terms[arg_hash]
                     term2.args[i] = v
                     l = Apply(op=lit.op, args=[term1, term2])
                     return l
                 else:
-                    v = self.update_atrbs(pos, index, hs)
+                    v = self.update_atrbs(pos, index, arg_hash)
                     l1 = Apply(op="!=", args=[v, term2.args[i]])
                     term2.args[i] = v
                     l2 = Apply(op=lit.op, args=[term1, term2])
@@ -177,10 +190,15 @@ class Flattener:
 def transform(tree):
     """Transform parsed tree into formula with clauses only containing shallow literals."""
     flattened = CNF(clauses=[])
+
     for clause in tree.clauses:
         cl = Clause(literals=[])
+        # transform shallow lits of the form 3 here
         f = Flattener()
         for j, lit in enumerate(clause.literals):
+            if shallow3(lit) == 1:
+                print(lit)
+                assert False
             cl.literals.extend(f.flatten(lit, j).literals)
         flattened.clauses.append(cl)
     return flattened
@@ -206,14 +224,25 @@ def ground(ids, cl, s):
     vars = collect(cl, Var)
     rep = len(vars)
     vars_names = [v.name for v in vars]
-
     names = {vars_names[i]: i for i in range(rep)}
+
     for tup in product(range(s), repeat=rep):
         gr = []  # grounding for current tuple
+        add_cl = True
         for lit in cl.literals:
-            sign, op, args, d = get_prms(tup, lit, names)
-            gr.append(var(ids, sign, op, args, d))
-        clauses += [gr]
+            add_lit = True
+            if shallow3(lit) == 3:
+                v1, v2 = get_terms(lit)
+                if tup[names[v1.name]] == tup[names[v2.name]]:
+                    add_cl = False
+                    break
+                else:
+                    add_lit = False
+            if add_lit:
+                sign, op, args, d = get_prms(tup, lit, names)
+                gr.append(var(ids, sign, op, args, d))  # dont append if x=y is false
+        if add_cl:
+            clauses += [gr]  # dont add grounding if x=y is true
     return clauses
 
 
@@ -234,3 +263,4 @@ if __name__ == "__main__":
     testme("c*d!=d*c.")
     testme("(x*y)*(x*y)=w.")
     testme("d*e=d*x | e*x=d*w.")
+    testme("x*y!= x*z | y=z.")
