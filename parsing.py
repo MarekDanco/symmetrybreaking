@@ -1,5 +1,6 @@
 """Parse, flatten and ground input."""
 
+from copy import deepcopy
 from collections import namedtuple, deque
 from pyparsing import Suppress, Word, Forward, Optional, ZeroOrMore, Literal
 from itertools import product
@@ -116,11 +117,11 @@ def shallow(lit):
 
 def shallow3(lit):
     """Check shallow literals of the form 3 from paradoxpaper.
-    Return values = 2 -> possibly form 2, 1 -> x!=y, 3 -> form 3."""
+    Return values: 1 -> x!=y, 2 -> possibly form 2, 3 -> form 3."""
     term1, term2 = get_terms(lit)
     if isinstance(term1, Var):
         if isinstance(term2, Var):
-            if lit.op == "=":
+            if lit.op == Parser.EQ:
                 return 3
             return 1
     return 2
@@ -132,7 +133,7 @@ def var_first(lit):
     return Apply(op=lit.op, args=[term1, term2])
 
 
-class Flattener:
+class Flatten:
     """MACE like flattening for shallow literals of the form 2."""
 
     def __init__(self):
@@ -175,6 +176,8 @@ class Flattener:
             if shallow(top):
                 top = var_first(top)
                 cl.literals.append(top)
+            elif shallow3(top) == 3:
+                cl.literals.append(top)
             else:
                 term1, term2 = get_terms(top)
                 if isinstance(term1, Var):
@@ -187,14 +190,80 @@ class Flattener:
         return cl
 
 
+class Rename:
+    """Rename nodes according to a given dict."""
+
+    def __init__(self, rn):
+        self.rn = rn
+
+    def transform(self, t):
+        """Entry point to the class. Call to obtain the transformed tree."""
+        mapping = {
+            Var: self.transform_Var,
+            Const: self.transform_Const,
+            Apply: self.transform_Apply,
+            Clause: self.transform_Clause,
+            CNF: self.transform_CNF,
+        }
+        return mapping[type(t)](t)
+
+    def transform_Var(self, t):
+        return self.rn.get(t, t)
+
+    def transform_Const(self, t):
+        """Transform given const, identity by default."""
+        return t
+
+    def transform_Apply(self, t):
+        """Transform given const, identity by default."""
+        return Apply(op=t.op, args=self.transform_all(t.args))
+
+    def transform_Clause(self, t):
+        """Transform given clause, identity by default."""
+        return Clause(literals=self.transform_all(t.literals))
+
+    def transform_CNF(self, t):
+        """Transform given cnf, identity by default."""
+        return CNF(clauses=self.transform_all(t.clauses))
+
+    def transform_all(self, ts):
+        """Given a sequence of trees it produces a list of transformed trees."""
+        changed = False
+        rv = []
+        for t in ts:
+            t1 = self.transform(t)
+            changed = changed or (t1 is not t)
+            rv.append(t1)
+        return rv if changed else ts
+
+
 def transform(tree):
     """Transform parsed tree into formula with clauses only containing shallow literals."""
-    flattened = CNF(clauses=[])
-
+    new_tree = CNF(clauses=[])
     for clause in tree.clauses:
+        new_clause = Clause(literals=deepcopy(clause.literals))
+        while True:
+            unchanged = True
+            rn = dict()  # rename dictionary
+            for i, lit in enumerate(new_clause.literals):
+                if shallow3(lit) == 1:
+                    unchanged = False
+                    rn.update({lit.args[0]: lit.args[1]})
+                    new_clause = Clause(
+                        literals=[
+                            l for j, l in enumerate(new_clause.literals) if j != i
+                        ]
+                    )
+                    break
+            if unchanged:
+                break
+            new_clause = Rename(rn).transform(new_clause)
+        new_tree.clauses.append(new_clause)
+
+    flattened = CNF(clauses=[])
+    for clause in new_tree.clauses:
         cl = Clause(literals=[])
-        # transform shallow lits of the form 3 here
-        f = Flattener()
+        f = Flatten()
         for j, lit in enumerate(clause.literals):
             if shallow3(lit) == 1:
                 print(lit)
@@ -206,7 +275,7 @@ def transform(tree):
 
 def get_prms(tup, lit, names):
     """Get parameters for a propositional variable."""
-    sign = True if lit.op == "=" else False
+    sign = True if lit.op == Parser.EQ else False
     d = tup[names[lit.args[0].name]]  # first arg in equality is always Var
     func = lit.args[1]  # second is always Term
     if isinstance(func, Const):
@@ -228,20 +297,20 @@ def ground(ids, cl, s):
 
     for tup in product(range(s), repeat=rep):
         gr = []  # grounding for current tuple
-        add_cl = True
+        add_gr = True
         for lit in cl.literals:
             add_lit = True
             if shallow3(lit) == 3:
                 v1, v2 = get_terms(lit)
                 if tup[names[v1.name]] == tup[names[v2.name]]:
-                    add_cl = False
+                    add_gr = False
                     break
                 else:
                     add_lit = False
             if add_lit:
                 sign, op, args, d = get_prms(tup, lit, names)
                 gr.append(var(ids, sign, op, args, d))  # dont append if x=y is false
-        if add_cl:
+        if add_gr:
             clauses += [gr]  # dont add grounding if x=y is true
     return clauses
 
@@ -264,3 +333,4 @@ if __name__ == "__main__":
     testme("(x*y)*(x*y)=w.")
     testme("d*e=d*x | e*x=d*w.")
     testme("x*y!= x*z | y=z.")
+    testme("x*y=w | x*y = z | x!=y | y!=z | w!=z.")

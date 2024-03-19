@@ -32,7 +32,6 @@ def testme(inp):
     end = time.perf_counter()
     print(f"{(end - start):.5f} seconds")
     constants = collect(tree, Const)
-    print(constants)
 
     print("flattening: ", end="", flush=True)
     start = time.perf_counter()
@@ -78,4 +77,4 @@ def testme(inp):
 
 
 if __name__ == "__main__":
-    testme("c*d!=d*c. x*e=x. e*x=x. x*x'=e. x'*x=e. (x*y)*z=x*(y*z).")
+    testme("x*y != x*z | y = z. y*x != z*x | y = z. e*x = x. x*e = x.")

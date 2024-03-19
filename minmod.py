@@ -86,10 +86,10 @@ def transps(s):
     return tps
 
 
-def lnh(ids, s, constants):
+def lnh(ids, s):
+    """Least number heuristic for binary functions only."""
     clauses = []
-    for i, c in enumerate(constants):
-        clauses += [[var(ids, True, "_", [c.name], d) for d in range(i + 1)]]
+
     return clauses
 
 
@@ -103,8 +103,8 @@ def minimal(ids, s, transpositions, concentric, constants):
     if concentric:
         cells.sort(key=lambda e: max(e[0], e[1]))
 
-    if concentric and transpositions:
-        clauses += lnh(ids, s, constants)
+    # if concentric and transpositions:
+    # clauses += lnh(ids, s)
 
     for pi in perms:
         # skip identity permutation
