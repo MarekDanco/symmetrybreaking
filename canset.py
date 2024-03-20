@@ -5,12 +5,7 @@ from pysat.formula import IDPool
 from basics import pick_one, print_cnf, debug_model
 from minmod import larger_set, inv
 from itertools import product
-
-
-def var(ids, sign, op, args, d):
-    """Propositional variable for equality of terms."""
-    rv = ids.id(f"{op}_{args}={d}")
-    return rv if sign else -rv
+from phi import var, Group
 
 
 def perm(ids, s):
@@ -258,6 +253,7 @@ def alg1(s):
     cnf += perm(ids, s)
     cnf += iso(ids, s)
     cnf += greater(ids, s)
+    cnf += Group(ids, s).group()
 
     solver = Solver(name="lgl", bootstrap_with=cnf)
 
@@ -332,10 +328,12 @@ def greater2(ids, s, pi):
 def alg2(s, p):
     ids = IDPool()
     p_reduce = list(p)
+    g = Group(ids, s).group()
     for perm in p:
         print(".", end="", flush=True)
         pi = p_reduce.pop(p_reduce.index(perm))
         cnf = one_hot(ids, s, "a")
+        cnf += g
         for perm2 in p_reduce:
             cnf += minimality(ids, s, perm2)
         cnf += greater2(ids, s, pi)
