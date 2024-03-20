@@ -60,7 +60,7 @@ def var(ids, sign, op, args, d):
     """Return propositional variable for equality of terms."""
     if op == "*":
         rv = ids.id(f"{args[0]}*{args[1]}={d}")
-    if op == "_":  # constant or variable
+    if op == "_":  # constants
         rv = ids.id(f"{args[0]}={d}")
     if op == "'":
         rv = ids.id(f"{args[0]}'={d}")
