@@ -290,9 +290,13 @@ def smaller_set(pi, d, s):
     return {i for i in range(s) if pi[i] < d}
 
 
+def grtr2(ids, pi, cell):
+    return ids.id(f"grtr_{pi}_{cell}")
+
+
 def sub_grtr2(ids, pi, cell, s):
     clauses = []
-    grt = -grtr(ids, cell)
+    grt = -grtr2(ids, pi, cell)
     inverse = inv(pi)
     clauses += [
         [grt, var(ids, False, "a", cell, d)]
@@ -378,10 +382,10 @@ def alg2_assumps(s, p):
         print(".", end="", flush=True)
         p_reduce.pop(p_reduce.index(pi))
         asmps = (
-            [assump2(ids, perm) for perm in p if perm != pi]
-            + [assump(ids, perm) for perm in p if perm not in p_reduce]
-            + [-assump2(ids, pi)]
-            + [-assump(ids, perm) for perm in p_reduce]
+            [-assump2(ids, pi)]
+            + [-assump(ids, prm) for prm in p_reduce]
+            + [assump2(ids, prm) for prm in p if prm != pi]
+            + [assump(ids, prm) for prm in p if prm not in p_reduce]
         )
         if solver.solve(assumptions=asmps):
             p_reduce.append(pi)  # pi is not redundant
@@ -390,8 +394,8 @@ def alg2_assumps(s, p):
 
 
 if __name__ == "__main__":
-    s = 4
+    s = 5
     p = alg1(s)
     print(f"Size of the canonizing set: {len(p)}")
-    p2 = alg2(s, p)
+    p2 = alg2_assumps(s, p)
     print(f"\nSize of the reduced canonizing set: {len(p2)}")
