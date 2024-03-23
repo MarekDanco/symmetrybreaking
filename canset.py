@@ -5,7 +5,7 @@ from pysat.formula import IDPool
 from basics import pick_one, print_cnf, debug_model
 from minmod import larger_set, inv
 from itertools import product
-from phi import var, Group
+from phi import var, Group, Quasigroup
 
 
 def perm(ids, s):
@@ -200,9 +200,17 @@ def sub_eql_min(ids, pi, cell, s):
     return clauses
 
 
-def minimality(ids, s, pi):
+def assump(ids, pi):
+    """Assumptions for A <= pi(A) constraints."""
+    return ids.id(f"assump1_{pi}")
+
+
+def minimality(ids, s, pi, assumptions=False):
     """Constraints for A <= pi(A)."""
     clauses = []
+    asmp = []
+    if assumptions:
+        asmp.append(assump(ids, pi))
     rng = range(s)
     cells = [[x, y] for x in rng for y in rng]
 
@@ -212,8 +220,8 @@ def minimality(ids, s, pi):
 
     # constraints for the first cell
     clauses += [
-        [less(ids, pi, [0, 0]), eql_min(ids, pi, [0, 0])],
-        [less(ids, pi, [0, 0]), r_min(ids, pi, 0)],
+        [less(ids, pi, [0, 0]), eql_min(ids, pi, [0, 0])] + asmp,
+        [less(ids, pi, [0, 0]), r_min(ids, pi, 0)] + asmp,
     ]
 
     for i, cell in enumerate(cells):
@@ -223,7 +231,7 @@ def minimality(ids, s, pi):
         r = -r_min(ids, pi, i - 1)  # relaxation variable from the previous cell
         l = less(ids, pi, cell)
         e = eql_min(ids, pi, cell)
-        clauses += [[r, l, e], [r, l, r_min(ids, pi, i)]]
+        clauses += [[r, l, e] + asmp, [r, l, r_min(ids, pi, i)] + asmp]
 
     # constraints for the last cell
     clauses += [
@@ -232,6 +240,7 @@ def minimality(ids, s, pi):
             less(ids, pi, [s - 1, s - 1]),
             eql_min(ids, pi, [s - 1, s - 1]),
         ]
+        + asmp
     ]
     return clauses
 
@@ -272,6 +281,7 @@ def alg1(s):
         solver.add_clause(cl)
         solver.append_formula(minimality(ids, s, prm))
         perms += [prm]
+    solver.delete()
     return perms
 
 
@@ -295,9 +305,17 @@ def sub_grtr2(ids, pi, cell, s):
     return clauses
 
 
-def greater2(ids, s, pi):
+def assump2(ids, pi):
+    """Assumptions for A > pi(A) constraints."""
+    return ids.id(f"assump2_{pi}")
+
+
+def greater2(ids, s, pi, assumptions=False):
     """Constraints for A>pi(A)."""
     clauses = []
+    asmp = []
+    if assumptions:
+        asmp.append(assump2(ids, pi))
     rng = range(s)
     cells = [[x, y] for x in rng for y in rng]
 
@@ -307,8 +325,8 @@ def greater2(ids, s, pi):
 
     # constraints for the first cell
     clauses += [
-        [grtr(ids, [0, 0]), eql_min(ids, pi, [0, 0])],
-        [grtr(ids, [0, 0]), r_grtr(ids, 0)],
+        [grtr(ids, [0, 0]), eql_min(ids, pi, [0, 0])] + asmp,
+        [grtr(ids, [0, 0]), r_grtr(ids, 0)] + asmp,
     ]
 
     for i, cell in enumerate(cells):
@@ -318,33 +336,61 @@ def greater2(ids, s, pi):
         g = grtr(ids, cell)
         e = eql_min(ids, pi, cell)
 
-        clauses += [[r, g, e], [r, g, r_grtr(ids, i)]]
+        clauses += [[r, g, e] + asmp, [r, g, r_grtr(ids, i)] + asmp]
 
     # constraints for the last cell
-    clauses += [[-r_grtr(ids, s**2 - 2), grtr(ids, [s - 1, s - 1])]]
+    clauses += [[-r_grtr(ids, s**2 - 2), grtr(ids, [s - 1, s - 1])] + asmp]
     return clauses
 
 
 def alg2(s, p):
     ids = IDPool()
-    p_reduce = list(p)
+    oh = one_hot(ids, s, "a")
     g = Group(ids, s).group()
-    for perm in p:
+    p_reduce = list(p)
+    for pi in p:
         print(".", end="", flush=True)
-        pi = p_reduce.pop(p_reduce.index(perm))
-        cnf = one_hot(ids, s, "a")
+        cnf = []
+        cnf += oh
         cnf += g
-        for perm2 in p_reduce:
-            cnf += minimality(ids, s, perm2)
+        p_reduce.pop(p_reduce.index(pi))
+        for perm in p_reduce:
+            cnf += minimality(ids, s, perm)
         cnf += greater2(ids, s, pi)
         solver = Solver(name="lgl", bootstrap_with=cnf)
         if solver.solve():
+            p_reduce.append(pi)
+    solver.delete()
+    return p_reduce
+
+
+def alg2_assumps(s, p):
+    ids = IDPool()
+    cnf = one_hot(ids, s, "a")
+    cnf += Group(ids, s).group()
+    for pi in p:
+        cnf += minimality(ids, s, pi, assumptions=True)
+        cnf += greater2(ids, s, pi, assumptions=True)
+
+    solver = Solver(name="lgl", bootstrap_with=cnf)
+    p_reduce = list(p)
+    for pi in p:
+        print(".", end="", flush=True)
+        p_reduce.pop(p_reduce.index(pi))
+        asmps = (
+            [assump2(ids, perm) for perm in p if perm != pi]
+            + [assump(ids, perm) for perm in p if perm not in p_reduce]
+            + [-assump2(ids, pi)]
+            + [-assump(ids, perm) for perm in p_reduce]
+        )
+        if solver.solve(assumptions=asmps):
             p_reduce.append(pi)  # pi is not redundant
+    solver.delete
     return p_reduce
 
 
 if __name__ == "__main__":
-    s = 5
+    s = 4
     p = alg1(s)
     print(f"Size of the canonizing set: {len(p)}")
     p2 = alg2(s, p)

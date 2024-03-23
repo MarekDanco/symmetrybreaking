@@ -31,12 +31,12 @@ class Group:
         for x in range(self.s):
             clauses += pick_one([self.inv(True, x, d) for d in rng])
 
-        # axiom 1
+        # axiom x*e=x, e*x=x
         for x, y in product(rng, repeat=2):
             clauses += [[var(self.ids, True, "a", [x, y], x), self.e(False, y)]]
             clauses += [[var(self.ids, True, "a", [y, x], x), self.e(False, y)]]
 
-        # axiom 2
+        # axiom x*x'=e, x'*x=e
         for x, y, z in product(rng, repeat=3):
             clauses += [
                 [
@@ -53,7 +53,7 @@ class Group:
                 ]
             ]
 
-        # axiom 3
+        # axiom (x*y)*z=x*(y*z)
         for u, v, w, x, y, z in product(rng, repeat=6):
             clauses += [
                 [
@@ -62,5 +62,30 @@ class Group:
                     var(self.ids, False, "a", [x, y], w),
                     var(self.ids, False, "a", [y, z], v),
                 ]
+            ]
+        return clauses
+
+
+class Quasigroup:
+
+    def __init__(self, ids, s):
+        self.ids = ids
+        self.s = s
+
+    def quasigroup(self):
+        clauses = []
+        rng = range(self.s)
+        for w, x, y, z in product(rng, repeat=4):
+            if y == z:
+                continue
+            clauses += [
+                [
+                    var(self.ids, False, "a", [x, y], w),
+                    var(self.ids, False, "a", [x, z], w),
+                ],
+                [
+                    var(self.ids, False, "a", [y, x], w),
+                    var(self.ids, False, "a", [z, x], w),
+                ],
             ]
         return clauses
