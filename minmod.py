@@ -1,7 +1,8 @@
 """Functions for encoding model minimality with respect to some ordering."""
 
-from basics import var
+from basics import var, print_cnf
 from itertools import permutations, product
+from pysat.formula import IDPool
 
 
 def inv(pi):
@@ -86,14 +87,22 @@ def transps(s):
     return tps
 
 
-def lnh(ids, s):
+def lnh(ids, s, cells):
     """Least number heuristic for binary functions only."""
     clauses = []
-
+    for i, cell in enumerate(cells):
+        layer = max(cell[0], cell[1])
+        if layer + 2 == s:  # whole domain allowed
+            break
+        for d in range(layer + 2, s):
+            clauses += [
+                [var(ids, False, "*", cell, d)]
+                + [var(ids, True, "*", cells[j], d - 1) for j in range(i)]
+            ]
     return clauses
 
 
-def minimal(ids, s, transpositions, concentric, constants):
+def minimal(ids, s, transpositions, concentric):
     """Compute CNF for minimal model."""
     clauses = []
     rng = range(s)
@@ -102,9 +111,8 @@ def minimal(ids, s, transpositions, concentric, constants):
     cells = [(x, y) for x in rng for y in rng]
     if concentric:
         cells.sort(key=lambda e: max(e[0], e[1]))
-
-    # if concentric and transpositions:
-    # clauses += lnh(ids, s)
+    if transpositions:
+        clauses += lnh(ids, s, cells)
 
     for pi in perms:
         # skip identity permutation
@@ -139,3 +147,12 @@ def minimal(ids, s, transpositions, concentric, constants):
             ]
         ]
     return clauses
+
+
+if __name__ == "__main__":
+    s = 5
+    ids = IDPool()
+    cells = [[x, y] for x in range(s) for y in range(s)]
+    cells.sort(key=lambda e: max(e[0], e[1]))
+    cnf = lnh(ids, s, cells)
+    print_cnf(ids, cnf)
