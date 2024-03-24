@@ -90,14 +90,16 @@ def transps(s):
 def lnh(ids, s, cells):
     """Least number heuristic for binary functions only."""
     clauses = []
-    for i, cell in enumerate(cells):
+    sorted_cells = list(cells)
+    sorted_cells.sort(key=lambda e: max(e[0], e[1]))
+    for i, cell in enumerate(sorted_cells):
         layer = max(cell[0], cell[1])
         if layer + 2 == s:  # whole domain allowed
             break
         for d in range(layer + 2, s):
             clauses += [
                 [var(ids, False, "*", cell, d)]
-                + [var(ids, True, "*", cells[j], d - 1) for j in range(i)]
+                + [var(ids, True, "*", sorted_cells[j], d - 1) for j in range(i)]
             ]
     return clauses
 
