@@ -5,7 +5,7 @@ from pysat.formula import IDPool
 from basics import pick_one, print_cnf, debug_model
 from minmod import larger_set, inv
 from itertools import product
-from phi import var, Group, Quasigroup
+from phi import var, Group, Quasigroup, Same
 
 
 def perm(ids, s):
@@ -214,7 +214,7 @@ def minimality(ids, s, pi, assumptions=False):
     rng = range(s)
     cells = [[x, y] for x in rng for y in rng]
 
-    for cell in product(rng, repeat=2):
+    for cell in cells:
         clauses += sub_less(ids, pi, cell, s)
         clauses += sub_eql_min(ids, pi, cell, s)
 
@@ -262,7 +262,7 @@ def alg1(s):
     cnf += perm(ids, s)
     cnf += iso(ids, s)
     cnf += greater(ids, s)
-    cnf += Group(ids, s).group()
+    cnf += Same(ids, s).encode()
 
     solver = Solver(name="lgl", bootstrap_with=cnf)
 
@@ -278,7 +278,7 @@ def alg1(s):
                 cl.append(var(ids, False, "pi", i, d))
                 prm.append(d)
         print(prm, "\n=====")
-        solver.add_clause(cl)
+        # solver.add_clause(cl)
         solver.append_formula(minimality(ids, s, prm))
         perms += [prm]
     solver.delete()
@@ -371,7 +371,7 @@ def alg2(s, p):
 def alg2_assumps(s, p):
     ids = IDPool()
     cnf = one_hot(ids, s, "a")
-    cnf += Group(ids, s).group()
+    cnf += Same(ids, s).encode()
     for pi in p:
         cnf += minimality(ids, s, pi, assumptions=True)
         cnf += greater2(ids, s, pi, assumptions=True)
@@ -379,7 +379,6 @@ def alg2_assumps(s, p):
     solver = Solver(name="lgl", bootstrap_with=cnf)
     p_reduce = list(p)
     for pi in p:
-        print(".", end="", flush=True)
         p_reduce.pop(p_reduce.index(pi))
         asmps = (
             [-assump2(ids, pi)]
@@ -394,7 +393,7 @@ def alg2_assumps(s, p):
 
 
 if __name__ == "__main__":
-    s = 5
+    s = 6
     p = alg1(s)
     print(f"Size of the canonizing set: {len(p)}")
     p2 = alg2_assumps(s, p)

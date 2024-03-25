@@ -24,7 +24,7 @@ class Group:
         rv = self.ids.id(f"{x}'={d}")
         return rv if sign else -rv
 
-    def group(self):
+    def encode(self):
         clauses = []
         rng = range(self.s)
         clauses += pick_one([self.e(True, d) for d in rng])
@@ -72,7 +72,7 @@ class Quasigroup:
         self.ids = ids
         self.s = s
 
-    def quasigroup(self):
+    def encode(self):
         clauses = []
         rng = range(self.s)
         for w, x, y, z in product(rng, repeat=4):
@@ -87,5 +87,24 @@ class Quasigroup:
                     var(self.ids, False, "a", [y, x], w),
                     var(self.ids, False, "a", [z, x], w),
                 ],
+            ]
+        return clauses
+
+
+class Same:
+
+    def __init__(self, ids, s):
+        self.ids = ids
+        self.s = s
+
+    def encode(self):
+        clauses = []
+        rng = range(self.s)
+        for w, x, y, z, u in product(rng, repeat=5):
+            clauses += [
+                [
+                    var(self.ids, True, "a", [x, y], w),
+                    var(self.ids, False, "a", [z, u], w),
+                ]
             ]
         return clauses
