@@ -39,7 +39,7 @@ def testme(inp):
     end = time.perf_counter()
     print(f"{(end - start):.5f} seconds")
 
-    s = 6
+    s = 7
     ids = IDPool()
     cnf = []
 
@@ -57,7 +57,7 @@ def testme(inp):
     print(f"{(end - start):.5f} seconds")
     print("minimality: ", end="", flush=True)
     start = time.perf_counter()
-    cnf += minimal(ids, s, args.permutations, args.concentric, constants)
+    cnf += minimal(ids, s, args.permutations, args.concentric)
     end = time.perf_counter()
     print(f"{(end - start):.5f} seconds")
 
@@ -77,4 +77,4 @@ def testme(inp):
 
 
 if __name__ == "__main__":
-    testme("x*y != x*z | y = z. y*x != z*x | y = z. e*x = x. x*e = x.")
+    testme("x*y!=x*z | z=y. y*x!=z*x | z=y. e*x = x. x*e = x.")

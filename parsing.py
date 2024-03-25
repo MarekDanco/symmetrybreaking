@@ -329,8 +329,7 @@ def testme(inp):
 
 
 if __name__ == "__main__":
-    testme("c*d!=d*c.")
-    testme("(x*y)*(x*y)=w.")
-    testme("d*e=d*x | e*x=d*w.")
-    testme("x*y!= x*z | y=z.")
     testme("x*y=w | x*y = z | x!=y | y!=z | w!=z.")
+    testme(
+        "z*(x*(z*y))=((z*x)*z)*y. x*(z*(y*z))=((x*z)*y)*z. (z*x)*(y*z)=(z*(x*y))*z. (z*x)*(y*z)=z*((x*y)*z)."
+    )
