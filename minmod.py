@@ -13,9 +13,9 @@ def inv(pi):
     return rv
 
 
-def larger_set(pi, d, s):
+def larger_set(pi, d):
     """Return the set of values larger than d under permutation pi."""
-    return {i for i in range(s) if pi[i] > d}
+    return {i for i, val in enumerate(pi) if val > d}
 
 
 def relax(ids, pi, i):
@@ -33,19 +33,32 @@ def equal(ids, pi, cell):
     return ids.id(("e", pi, tuple(cell)))
 
 
+def smaller_values(pi):
+    """Set of values x<pi(x)."""
+    return {i for i, val in enumerate(pi) if i < val}
+
+
+def equal_values(pi):
+    """Set of values x=pi(x)."""
+    return {i for i, val in enumerate(pi) if i == val}
+
+
 def sub_l(ids, pi, cell, s):
     """Substitute "cell is less than pi(inv(cell))" constraint with a variable."""
     clauses = []
     l = -less(ids, pi, cell)
     inverse = inv(pi)
-    clauses += [
-        [l, var(ids, False, "*", cell, d)]
-        + [
-            var(ids, True, "*", [inverse[arg] for arg in cell], d2)
-            for d2 in larger_set(pi, d, s)
+    if (pi[cell[0]] == cell[0]) and (pi[cell[1]] == cell[1]):
+        clauses += [[l] + [var(ids, True, "*", cell, d) for d in smaller_values(pi)]]
+    else:
+        clauses += [
+            [l, var(ids, False, "*", cell, d)]
+            + [
+                var(ids, True, "*", [inverse[arg] for arg in cell], d2)
+                for d2 in larger_set(pi, d)
+            ]
+            for d in range(s)
         ]
-        for d in range(s)
-    ]
     return clauses
 
 
@@ -54,23 +67,17 @@ def sub_e(ids, pi, cell, s):
     clauses = []
     e = -equal(ids, pi, cell)
     inverse = inv(pi)
-    clauses += [
-        [
-            e,
-            var(ids, False, "*", cell, d),
-            var(ids, True, "*", [inverse[arg] for arg in cell], inverse[d]),
+    if (pi[cell[0]] == cell[0]) and (pi[cell[1]] == cell[1]):
+        clauses += [[e] + [var(ids, True, "*", cell, d) for d in equal_values(pi)]]
+    else:
+        clauses += [
+            [
+                e,
+                var(ids, False, "*", cell, d),
+                var(ids, True, "*", [inverse[arg] for arg in cell], inverse[d]),
+            ]
+            for d in range(s)
         ]
-        for d in range(s)
-    ]
-    clauses += [
-        [
-            e,
-            var(ids, True, "*", cell, d),
-            var(ids, False, "*", [inverse[arg] for arg in cell], inverse[d]),
-        ]
-        for d in range(s)
-    ]
-
     return clauses
 
 
@@ -102,6 +109,7 @@ def lnh(ids, s, cells):
     return clauses
 
 
+# TODO fixne body
 def minimal(ids, s, transpositions, concentric):
     """Compute CNF for minimal model."""
     clauses = []
@@ -119,7 +127,7 @@ def minimal(ids, s, transpositions, concentric):
         if pi == tuple([i for i in rng]):
             continue
 
-        for cell in product(rng, repeat=2):
+        for cell in cells:
             clauses += sub_l(ids, pi, cell, s)
             clauses += sub_e(ids, pi, cell, s)
 

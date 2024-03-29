@@ -262,7 +262,7 @@ def alg1(s):
     cnf += perm(ids, s)
     cnf += iso(ids, s)
     cnf += greater(ids, s)
-    cnf += Same(ids, s).encode()
+    cnf += Group(ids, s).encode()
 
     solver = Solver(name="lgl", bootstrap_with=cnf)
 
@@ -371,7 +371,7 @@ def alg2(s, p):
 def alg2_assumps(s, p):
     ids = IDPool()
     cnf = one_hot(ids, s, "a")
-    cnf += Same(ids, s).encode()
+    cnf += Group(ids, s).encode()
     for pi in p:
         cnf += minimality(ids, s, pi, assumptions=True)
         cnf += greater2(ids, s, pi, assumptions=True)
@@ -393,8 +393,9 @@ def alg2_assumps(s, p):
 
 
 if __name__ == "__main__":
-    s = 6
+    s = 8
     p = alg1(s)
     print(f"Size of the canonizing set: {len(p)}")
     p2 = alg2_assumps(s, p)
     print(f"\nSize of the reduced canonizing set: {len(p2)}")
+    print(p2)
