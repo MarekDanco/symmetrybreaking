@@ -30,6 +30,7 @@ class Timer:
         elapsed_time = time.perf_counter() - self._start_time
         self._start_time = None
         print(f"{elapsed_time:.5f} seconds")
+        return elapsed_time
 
 
 def var2str(ids, var):

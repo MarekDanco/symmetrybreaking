@@ -8,6 +8,14 @@ from itertools import product
 from phi import var, Group, Quasigroup, Same
 
 
+def one_hot(ids, s, alg):
+    clauses = []
+    rng = range(s)
+    for x, y in product(rng, repeat=2):
+        clauses += pick_one([var(ids, True, alg, [x, y], d) for d in rng])
+    return clauses
+
+
 def perm(ids, s):
     """CNF encoding of a permutation."""
     rng = range(s)
@@ -29,9 +37,10 @@ def rhs(ids, *args):
 
 
 def sub_rhs(ids, s):
-    """Substitute the conjunct on the right-hand side of iso formula with a variable."""
+    """Substitute the conjuncts on the right-hand side of cell>pi(inv(cell)) and
+    cell=pi(inv(cell)) formulas with variables."""
     clauses = []
-    for x, i, j, y, k, l in product(range(s), repeat=6):
+    for x, i, j, y, k, l in product(range(s), repeat=6):  # equal
         clauses += [
             [-rhs(ids, x, i, j, y, k, l), var(ids, True, "pi", y, x)],
             [-rhs(ids, x, i, j, y, k, l), var(ids, True, "pi", k, i)],
@@ -50,34 +59,6 @@ def sub_rhs(ids, s):
     return clauses
 
 
-def one_hot(ids, s, alg):
-    clauses = []
-    rng = range(s)
-    for x, y in product(rng, repeat=2):
-        clauses += pick_one([var(ids, True, alg, [x, y], d) for d in rng])
-    return clauses
-
-
-def iso(ids, s):
-    """Constraints for isomorphism of magmas."""
-    rng = range(s)
-    clauses = sub_rhs(ids, s)
-    clauses += one_hot(ids, s, "a")
-    clauses += one_hot(ids, s, "b")
-    for x, i, j in product(rng, repeat=3):
-        # =>
-        clauses += [
-            [var(ids, False, "b", [i, j], x)]
-            + [rhs(ids, x, i, j, y, k, l) for y, k, l in product(rng, repeat=3)]
-        ]
-        # <=
-        clauses += [
-            [var(ids, True, "b", [i, j], x), -rhs(ids, x, i, j, y, k, l)]
-            for y, k, l in product(rng, repeat=3)
-        ]
-    return clauses
-
-
 def r_grtr(ids, i):
     """Variable for "following cells are greater" in A>B constraints."""
     return ids.id(f"r_{i}")
@@ -92,26 +73,29 @@ def eql_grtr(ids, cell):
 
 
 def sub_grtr(ids, cell, s):
+    rng = range(s)
     clauses = []
     grt = -grtr(ids, cell)
     clauses += [
-        [grt, var(ids, False, "a", cell, d)]
-        + [var(ids, True, "b", cell, d2) for d2 in range(d)]
-        for d in range(s)
+        [grt, var(ids, False, "a", cell, x)]
+        + [
+            rhs(ids, d, cell[0], cell[1], y, k, l)
+            for d, y, k, l in product(rng, repeat=4)
+            if d < x
+        ]
+        for x in rng
     ]
     return clauses
 
 
 def sub_eql_grtr(ids, cell, s):
+    rng = range(s)
     clauses = []
     eq = -eql_grtr(ids, cell)
     clauses += [
-        [eq, var(ids, False, "a", cell, d), var(ids, True, "b", cell, d)]
-        for d in range(s)
-    ]
-    clauses += [
-        [eq, var(ids, True, "a", cell, d), var(ids, False, "b", cell, d)]
-        for d in range(s)
+        [eq, var(ids, False, "a", cell, x)]
+        + [rhs(ids, x, cell[0], cell[1], y, k, l) for y, k, l in product(rng, repeat=3)]
+        for x in rng
     ]
     return clauses
 
@@ -119,6 +103,7 @@ def sub_eql_grtr(ids, cell, s):
 def greater(ids, s):
     """Constraints for A>B."""
     clauses = []
+    clauses += sub_rhs(ids, s)
     rng = range(s)
     cells = [[x, y] for x in rng for y in rng]
 
@@ -198,15 +183,6 @@ def sub_eql_min(ids, pi, cell, s):
         ]
         for d in range(s)
     ]
-    clauses += [
-        [
-            e,
-            var(ids, True, "a", cell, d),
-            var(ids, False, "a", [inverse[arg] for arg in cell], inverse[d]),
-        ]
-        for d in range(s)
-    ]
-
     return clauses
 
 
@@ -269,8 +245,8 @@ def alg1(s):
     ids = IDPool()
     cnf = []
 
+    cnf += one_hot(ids, s, "a")
     cnf += perm(ids, s)
-    cnf += iso(ids, s)
     cnf += greater(ids, s)
     cnf += Same(ids, s).encode()
 
@@ -279,127 +255,16 @@ def alg1(s):
     perms = []
     while solver.solve():
         model = solver.get_model()
-        # cl = []  # blocking clause for current permutation
         prm = []  # current permutation
         print_table(ids, model, "a", s)
-        print_table(ids, model, "b", s)
         for i, d in product(range(s), repeat=2):
             if model[var(ids, True, "pi", i, d) - 1] > 0:
-                # cl.append(var(ids, False, "pi", i, d))
                 prm.append(d)
         print(prm, "\n=====")
-        # solver.add_clause(cl)
         solver.append_formula(minimality(ids, s, prm))
         perms += [prm]
     solver.delete()
     return perms
-
-
-def smaller_set(pi, d, s):
-    """Return the set of values smaller than d under permutation pi."""
-    return {i for i in range(s) if pi[i] < d}
-
-
-def grtr2(ids, pi, cell):
-    return ids.id(f"grtr_{pi}_{cell}")
-
-
-def sub_grtr2(ids, pi, cell, s):
-    clauses = []
-    grt = -grtr2(ids, pi, cell)
-    inverse = inv(pi)
-    clauses += [
-        [grt, var(ids, False, "a", cell, d)]
-        + [
-            var(ids, True, "a", [inverse[arg] for arg in cell], d2)
-            for d2 in smaller_set(pi, d, s)
-        ]
-        for d in range(s)
-    ]
-    return clauses
-
-
-def assump2(ids, pi):
-    """Assumptions for A > pi(A) constraints."""
-    return ids.id(f"assump2_{pi}")
-
-
-def greater2(ids, s, pi, assumptions=False):
-    """Constraints for A>pi(A)."""
-    clauses = []
-    asmp = []
-    if assumptions:
-        asmp.append(assump2(ids, pi))
-    rng = range(s)
-    cells = [[x, y] for x in rng for y in rng]
-
-    for cell in cells:
-        clauses += sub_grtr2(ids, pi, cell, s)
-        clauses += sub_eql_min(ids, pi, cell, s)
-
-    # constraints for the first cell
-    clauses += [
-        [grtr(ids, [0, 0]), eql_min(ids, pi, [0, 0])] + asmp,
-        [grtr(ids, [0, 0]), r_grtr(ids, 0)] + asmp,
-    ]
-
-    for i, cell in enumerate(cells):
-        if i in [0, s**2 - 1]:
-            continue
-        r = -r_grtr(ids, i - 1)  # relaxation variable from the previous cell
-        g = grtr(ids, cell)
-        e = eql_min(ids, pi, cell)
-
-        clauses += [[r, g, e] + asmp, [r, g, r_grtr(ids, i)] + asmp]
-
-    # constraints for the last cell
-    clauses += [[-r_grtr(ids, s**2 - 2), grtr(ids, [s - 1, s - 1])] + asmp]
-    return clauses
-
-
-def alg2(s, p):
-    ids = IDPool()
-    oh = one_hot(ids, s, "a")
-    g = Group(ids, s).group()
-    p_reduce = list(p)
-    for pi in p:
-        print(".", end="", flush=True)
-        cnf = []
-        cnf += oh
-        cnf += g
-        p_reduce.pop(p_reduce.index(pi))
-        for perm in p_reduce:
-            cnf += minimality(ids, s, perm)
-        cnf += greater2(ids, s, pi)
-        solver = Solver(name="cd", bootstrap_with=cnf)
-        if solver.solve():
-            p_reduce.append(pi)
-    solver.delete()
-    return p_reduce
-
-
-def alg2_assumps(s, p):
-    ids = IDPool()
-    cnf = one_hot(ids, s, "a")
-    cnf += Same(ids, s).encode()
-    for pi in p:
-        cnf += minimality(ids, s, pi, assumptions=True)
-        cnf += greater2(ids, s, pi, assumptions=True)
-
-    solver = Solver(name="cd", bootstrap_with=cnf)
-    p_reduce = list(p)
-    for pi in p:
-        p_reduce.pop(p_reduce.index(pi))
-        asmps = (
-            [-assump2(ids, pi)]
-            + [-assump(ids, prm) for prm in p_reduce]
-            + [assump2(ids, prm) for prm in p if prm != pi]
-            + [assump(ids, prm) for prm in p if prm not in p_reduce]
-        )
-        if solver.solve(assumptions=asmps):
-            p_reduce.append(pi)  # pi is not redundant
-    solver.delete
-    return p_reduce
 
 
 if __name__ == "__main__":
@@ -409,6 +274,4 @@ if __name__ == "__main__":
     p = alg1(s)
     t.stop()
     print(f"Size of the canonizing set: {len(p)}")
-    p2 = alg2_assumps(s, p)
-    print(f"Size of the reduced canonizing set: {len(p2)}")
-    print(p2)
+    print(p)
