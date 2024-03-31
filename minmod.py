@@ -109,6 +109,7 @@ def lnh(ids, s, cells):
     return clauses
 
 
+# TODO fixne body
 def minimal(ids, s, transpositions, concentric):
     """Compute CNF for minimal model."""
     clauses = []
