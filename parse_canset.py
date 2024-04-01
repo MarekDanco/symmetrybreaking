@@ -93,7 +93,7 @@ def sub_eql_grtr(ids, cell, s):
     return clauses
 
 
-def greater(ids, s):
+def greater(ids, s, sub_g, sub_e):
     """Constraints for A>B."""
     clauses = []
     clauses += sub_rhs(ids, s)
@@ -101,8 +101,8 @@ def greater(ids, s):
     cells = [[x, y] for x in rng for y in rng]
 
     for cell in cells:
-        clauses += sub_grtr(ids, cell, s)
-        clauses += sub_eql_grtr(ids, cell, s)
+        clauses += sub_g(ids, cell, s)
+        clauses += sub_e(ids, cell, s)
 
     clauses += [
         [-eql_grtr(ids, cell) for cell in cells]
@@ -139,7 +139,7 @@ def alg1(ids, phi, s):
 
     cnf += phi
     cnf += perm(ids, s)
-    cnf += greater(ids, s)
+    cnf += greater(ids, s, sub_grtr, sub_eql_grtr)
     solver = Solver(name="cd", bootstrap_with=cnf)
 
     perms = []
