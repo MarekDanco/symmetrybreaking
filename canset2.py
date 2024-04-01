@@ -1,18 +1,18 @@
-"""Compute the reduced instance-independent canonizing set of permutations."""
+"""Compute the reduced canonizing set of permutations without use of algebra B."""
 
 from pysat.solvers import Solver
 from pysat.formula import IDPool
 from basics import pick_one, print_cnf, debug_model, Timer
 from minmod import larger_set, inv
 from itertools import product
-from phi import var, Group, Quasigroup, Same
+from phi import canset_var, Group, Quasigroup, Same
 
 
 def one_hot(ids, s, alg):
     clauses = []
     rng = range(s)
     for x, y in product(rng, repeat=2):
-        clauses += pick_one([var(ids, True, alg, [x, y], d) for d in rng])
+        clauses += pick_one([canset_var(ids, True, alg, [x, y], d) for d in rng])
     return clauses
 
 
@@ -21,10 +21,10 @@ def perm(ids, s):
     rng = range(s)
     clauses = []
     for i in rng:
-        clauses += pick_one([var(ids, True, "pi", i, d) for d in rng])  # 1-hot
+        clauses += pick_one([canset_var(ids, True, "pi", i, d) for d in rng])  # 1-hot
     for d in rng:
         clauses += [
-            [var(ids, False, "pi", i, d), var(ids, False, "pi", j, d)]
+            [canset_var(ids, False, "pi", i, d), canset_var(ids, False, "pi", j, d)]
             for i in rng
             for j in rng
             if i < j
@@ -40,20 +40,20 @@ def sub_rhs(ids, s):
     """Substitute the conjuncts on the right-hand side of cell>pi(inv(cell)) and
     cell=pi(inv(cell)) formulas with variables."""
     clauses = []
-    for x, i, j, y, k, l in product(range(s), repeat=6):  # equal
+    for x, i, j, y, k, l in product(range(s), repeat=6):
         clauses += [
-            [-rhs(ids, x, i, j, y, k, l), var(ids, True, "pi", y, x)],
-            [-rhs(ids, x, i, j, y, k, l), var(ids, True, "pi", k, i)],
-            [-rhs(ids, x, i, j, y, k, l), var(ids, True, "pi", l, j)],
-            [-rhs(ids, x, i, j, y, k, l), var(ids, True, "a", [k, l], y)],
+            [-rhs(ids, x, i, j, y, k, l), canset_var(ids, True, "pi", y, x)],
+            [-rhs(ids, x, i, j, y, k, l), canset_var(ids, True, "pi", k, i)],
+            [-rhs(ids, x, i, j, y, k, l), canset_var(ids, True, "pi", l, j)],
+            [-rhs(ids, x, i, j, y, k, l), canset_var(ids, True, "a", [k, l], y)],
         ]
         clauses += [
             [
                 rhs(ids, x, i, j, y, k, l),
-                var(ids, False, "pi", y, x),
-                var(ids, False, "pi", k, i),
-                var(ids, False, "pi", l, j),
-                var(ids, False, "a", [k, l], y),
+                canset_var(ids, False, "pi", y, x),
+                canset_var(ids, False, "pi", k, i),
+                canset_var(ids, False, "pi", l, j),
+                canset_var(ids, False, "a", [k, l], y),
             ]
         ]
     return clauses
@@ -77,7 +77,7 @@ def sub_grtr(ids, cell, s):
     clauses = []
     grt = -grtr(ids, cell)
     clauses += [
-        [grt, var(ids, False, "a", cell, x)]
+        [grt, canset_var(ids, False, "a", cell, x)]
         + [
             rhs(ids, d, cell[0], cell[1], y, k, l)
             for d, y, k, l in product(rng, repeat=4)
@@ -93,7 +93,7 @@ def sub_eql_grtr(ids, cell, s):
     clauses = []
     eq = -eql_grtr(ids, cell)
     clauses += [
-        [eq, var(ids, False, "a", cell, x)]
+        [eq, canset_var(ids, False, "a", cell, x)]
         + [rhs(ids, x, cell[0], cell[1], y, k, l) for y, k, l in product(rng, repeat=3)]
         for x in rng
     ]
@@ -124,7 +124,7 @@ def greater(ids, s):
     for i, cell in enumerate(cells):
         if i in [0, s**2 - 1]:
             continue
-        r = -r_grtr(ids, i - 1)  # relaxation variable from the previous cell
+        r = -r_grtr(ids, i - 1)
         g = grtr(ids, cell)
         e = eql_grtr(ids, cell)
 
@@ -160,9 +160,9 @@ def sub_less(ids, pi, cell, s):
     l = -less(ids, pi, cell)
     inverse = inv(pi)
     clauses += [
-        [l, var(ids, False, "a", cell, d)]
+        [l, canset_var(ids, False, "a", cell, d)]
         + [
-            var(ids, True, "a", [inverse[arg] for arg in cell], d2)
+            canset_var(ids, True, "a", [inverse[arg] for arg in cell], d2)
             for d2 in larger_set(pi, d)
         ]
         for d in range(s)
@@ -178,8 +178,8 @@ def sub_eql_min(ids, pi, cell, s):
     clauses += [
         [
             e,
-            var(ids, False, "a", cell, d),
-            var(ids, True, "a", [inverse[arg] for arg in cell], inverse[d]),
+            canset_var(ids, False, "a", cell, d),
+            canset_var(ids, True, "a", [inverse[arg] for arg in cell], inverse[d]),
         ]
         for d in range(s)
     ]
@@ -214,7 +214,7 @@ def minimality(ids, s, pi, assumptions=False):
         if i in [0, s**2 - 1]:
             continue
 
-        r = -r_min(ids, pi, i - 1)  # relaxation variable from the previous cell
+        r = -r_min(ids, pi, i - 1)
         l = less(ids, pi, cell)
         e = eql_min(ids, pi, cell)
         clauses += [[r, l, e] + asmp, [r, l, r_min(ids, pi, i)] + asmp]
@@ -234,7 +234,7 @@ def minimality(ids, s, pi, assumptions=False):
 def print_table(ids, model, alg, s):
     for x, y in product(range(s), repeat=2):
         for d in range(s):
-            if model[var(ids, True, alg, [x, y], d) - 1] > 0:
+            if model[canset_var(ids, True, alg, [x, y], d) - 1] > 0:
                 print(d, end=" ")
         if y == s - 1:
             print()
@@ -258,7 +258,7 @@ def alg1(s):
         prm = []  # current permutation
         print_table(ids, model, "a", s)
         for i, d in product(range(s), repeat=2):
-            if model[var(ids, True, "pi", i, d) - 1] > 0:
+            if model[canset_var(ids, True, "pi", i, d) - 1] > 0:
                 prm.append(d)
         print(prm, "\n=====")
         solver.append_formula(minimality(ids, s, prm))
@@ -271,6 +271,7 @@ if __name__ == "__main__":
     s = 8
     t = Timer()
     t.start(text="")
+    print()
     p = alg1(s)
     t.stop()
     print(f"Size of the canonizing set: {len(p)}")
