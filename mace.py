@@ -28,15 +28,15 @@ def testme(inp):
     t = Timer()
     t.start(text="parsing")
     tree = p.parse(inp)
-    inverses = find_inv(tree)
     t.stop()
+    inverses = find_inv(tree)
     constants = collect(tree, Const)
 
     t.start(text="flattening")
     flattened = transform(tree)
     t.stop()
 
-    s = 6
+    s = 4
     ids = IDPool()
     cnf = []
 

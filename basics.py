@@ -113,8 +113,8 @@ def one_hot(ids, constants, inverses: bool, s):
     rng = range(s)
 
     # *
-    for args in product(rng, repeat=2):
-        clauses += pick_one([var(ids, True, "*", [args[0], args[1]], d) for d in rng])
+    for x, y in product(rng, repeat=2):
+        clauses += pick_one([var(ids, True, "*", [x, y], d) for d in rng])
     # '
     if inverses:
         for x in rng:
