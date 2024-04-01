@@ -109,27 +109,20 @@ def lnh(ids, s, cells):
     return clauses
 
 
-# TODO fixne body
-def minimal(ids, s, transpositions, concentric):
-    """Compute CNF for minimal model."""
+def assump(ids, pi):
+    """Assumptions for A <= pi(A) constraints."""
+    return ids.id(f"assump_{pi}")
+
+
+def minimality(ids, cells, pi, s, assumptions=False):
+    """Constraints for A <= pi(A)."""
     clauses = []
-    rng = range(s)
-
-    perms = transps(s) if transpositions else permutations(rng)
-    cells = [(x, y) for x in rng for y in rng]
-    if concentric:
-        cells.sort(key=lambda e: max(e[0], e[1]))
-        if transpositions:
-            clauses += lnh(ids, s, cells)
-
-    for pi in perms:
-        # skip identity permutation
-        if pi == tuple([i for i in rng]):
-            continue
-
-        for cell in cells:
-            clauses += sub_l(ids, pi, cell, s)
-            clauses += sub_e(ids, pi, cell, s)
+    asmp = []
+    if assumptions:
+        asmp.append(assump(ids, pi))
+    for cell in cells:
+        clauses += sub_l(ids, pi, cell, s)
+        clauses += sub_e(ids, pi, cell, s)
 
         # constraints for the first cell
         clauses += [
@@ -154,6 +147,26 @@ def minimal(ids, s, transpositions, concentric):
                 equal(ids, pi, [s - 1, s - 1]),
             ]
         ]
+    return clauses
+
+
+def minimal(ids, s, transpositions, concentric):
+    """Compute CNF for minimal model."""
+    clauses = []
+    rng = range(s)
+
+    perms = transps(s) if transpositions else permutations(rng)
+    cells = [(x, y) for x in rng for y in rng]
+    if concentric:
+        cells.sort(key=lambda e: max(e[0], e[1]))
+        if transpositions:
+            clauses += lnh(ids, s, cells)
+
+    for pi in perms:
+        # skip identity permutation
+        if pi == tuple([i for i in rng]):
+            continue
+        clauses += minimality(ids, cells, pi, s)
     return clauses
 
 
