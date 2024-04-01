@@ -4,7 +4,7 @@ from basics import pick_one
 from itertools import product
 
 
-def var(ids, sign, op, args, d):
+def canset_var(ids, sign, op, args, d):
     """Propositional variable for equality of terms."""
     rv = ids.id(f"{op}_{args}={d}")
     return rv if sign else -rv
@@ -33,21 +33,21 @@ class Group:
 
         # axiom x*e=x, e*x=x
         for x, y in product(rng, repeat=2):
-            clauses += [[var(self.ids, True, "a", [x, y], x), self.e(False, y)]]
-            clauses += [[var(self.ids, True, "a", [y, x], x), self.e(False, y)]]
+            clauses += [[canset_var(self.ids, True, "a", [x, y], x), self.e(False, y)]]
+            clauses += [[canset_var(self.ids, True, "a", [y, x], x), self.e(False, y)]]
 
         # axiom x*x'=e, x'*x=e
         for x, y, z in product(rng, repeat=3):
             clauses += [
                 [
-                    var(self.ids, True, "a", [x, y], z),
+                    canset_var(self.ids, True, "a", [x, y], z),
                     self.inv(False, x, y),
                     self.e(False, z),
                 ]
             ]
             clauses += [
                 [
-                    var(self.ids, True, "a", [y, x], z),
+                    canset_var(self.ids, True, "a", [y, x], z),
                     self.inv(False, x, y),
                     self.e(False, z),
                 ]
@@ -57,10 +57,10 @@ class Group:
         for u, v, w, x, y, z in product(rng, repeat=6):
             clauses += [
                 [
-                    var(self.ids, True, "a", [w, z], u),
-                    var(self.ids, False, "a", [x, v], u),
-                    var(self.ids, False, "a", [x, y], w),
-                    var(self.ids, False, "a", [y, z], v),
+                    canset_var(self.ids, True, "a", [w, z], u),
+                    canset_var(self.ids, False, "a", [x, v], u),
+                    canset_var(self.ids, False, "a", [x, y], w),
+                    canset_var(self.ids, False, "a", [y, z], v),
                 ]
             ]
         return clauses
@@ -80,12 +80,12 @@ class Quasigroup:
                 continue
             clauses += [
                 [
-                    var(self.ids, False, "a", [x, y], w),
-                    var(self.ids, False, "a", [x, z], w),
+                    canset_var(self.ids, False, "a", [x, y], w),
+                    canset_var(self.ids, False, "a", [x, z], w),
                 ],
                 [
-                    var(self.ids, False, "a", [y, x], w),
-                    var(self.ids, False, "a", [z, x], w),
+                    canset_var(self.ids, False, "a", [y, x], w),
+                    canset_var(self.ids, False, "a", [z, x], w),
                 ],
             ]
         return clauses
@@ -103,8 +103,8 @@ class Same:
         for w, x, y, z, u in product(rng, repeat=5):
             clauses += [
                 [
-                    var(self.ids, True, "a", [x, y], w),
-                    var(self.ids, False, "a", [z, u], w),
+                    canset_var(self.ids, True, "a", [x, y], w),
+                    canset_var(self.ids, False, "a", [z, u], w),
                 ]
             ]
         return clauses
