@@ -3,7 +3,7 @@
 import argparse
 from pysat.solvers import Solver
 from pysat.formula import IDPool
-from parsing import Parser, transform, ground, Const, collect
+from parsing import Parser, transform, ground, Const, collect, find_inv
 from minmod import minimal
 from basics import one_hot, out, Timer
 
@@ -28,6 +28,7 @@ def testme(inp):
     t = Timer()
     t.start(text="parsing")
     tree = p.parse(inp)
+    inverses = find_inv(tree)
     t.stop()
     constants = collect(tree, Const)
 
@@ -45,7 +46,7 @@ def testme(inp):
     t.stop()
 
     t.start(text="1-hot")
-    cnf += one_hot(ids, constants, s)
+    cnf += one_hot(ids, constants, inverses, s)
     t.stop()
 
     t.start(text="minimality")
@@ -68,5 +69,4 @@ def testme(inp):
 
 
 if __name__ == "__main__":
-    # testme("x*y!=x*z | z=y. y*x!=z*x | z=y. e*x = x. x*e = x.")
     testme("e*x = x. x*e = x. x*x'=e. x'*x=e. x*(y*z)=(x*y)*z.")

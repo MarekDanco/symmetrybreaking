@@ -74,6 +74,31 @@ def collect(t, tp):
     assert False
 
 
+def find_inv(t):
+    """Check if the parsed tree contains inverses."""
+    if isinstance(t, Apply) and t.op == Parser.PRIME:
+        return True
+    if isinstance(t, Var) or isinstance(t, Const):
+        return False
+
+    if isinstance(t, Apply):
+        for arg in t.args:
+            res = find_inv(arg)
+            if res:
+                return True
+    if isinstance(t, Clause):
+        for lit in t.literals:
+            res = find_inv(lit)
+            if res:
+                return True
+    if isinstance(t, CNF):
+        for cl in t.clauses:
+            res = find_inv(cl)
+            if res:
+                return True
+    return False
+
+
 def tostr(t):
     """Basic print for ASTs."""
     if isinstance(t, (Var, Const)):
@@ -307,11 +332,11 @@ def ground(ids, cl, s):
                     break
                 else:
                     add_lit = False
-            if add_lit:
+            if add_lit:  # dont append if x!=y
                 sign, op, args, d = get_prms(tup, lit, names)
-                gr.append(var(ids, sign, op, args, d))  # dont append if x=y is false
-        if add_gr:
-            clauses += [gr]  # dont add grounding if x=y is true
+                gr.append(var(ids, sign, op, args, d))
+        if add_gr:  # dont add grounding if x=y
+            clauses += [gr]
     return clauses
 
 
@@ -322,7 +347,6 @@ def testme(inp):
 
     print("input:")
     print(tostr(tree))
-
     flattened = transform(tree)
     print("flattened:")
     print(f"{tostr(flattened)}\n")
@@ -330,6 +354,7 @@ def testme(inp):
 
 if __name__ == "__main__":
     testme("x*y=w | x*y = z | x!=y | y!=z | w!=z.")
-    testme(
-        "z*(x*(z*y))=((z*x)*z)*y. x*(z*(y*z))=((x*z)*y)*z. (z*x)*(y*z)=(z*(x*y))*z. (z*x)*(y*z)=z*((x*y)*z)."
-    )
+    testme("x*e=x. e*x=x. x*(y*z)=(x*y)*z. x*x'=e. x'*x=e.")
+    # testme(
+    #    "z*(x*(z*y))=((z*x)*z)*y. x*(z*(y*z))=((x*z)*y)*z. (z*x)*(y*z)=(z*(x*y))*z. (z*x)*(y*z)=z*((x*y)*z)."
+    # )

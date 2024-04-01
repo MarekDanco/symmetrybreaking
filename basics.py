@@ -107,7 +107,7 @@ def at_most_one(lits):
     return [[-v1, -v2] for v1 in lits for v2 in lits if v1 < v2]
 
 
-def one_hot(ids, constants, s):
+def one_hot(ids, constants, inverses: bool, s):
     """Ensure 1-hot of all functions."""
     clauses = []
     rng = range(s)
@@ -116,8 +116,9 @@ def one_hot(ids, constants, s):
     for args in product(rng, repeat=2):
         clauses += pick_one([var(ids, True, "*", [args[0], args[1]], d) for d in rng])
     # '
-    for x in rng:
-        clauses += pick_one([var(ids, True, "'", [x], d) for d in rng])
+    if inverses:
+        for x in rng:
+            clauses += pick_one([var(ids, True, "'", [x], d) for d in rng])
     # constants
     for cnst in constants:
         clauses += pick_one([var(ids, True, "_", [cnst.name], d) for d in rng])
