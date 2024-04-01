@@ -329,27 +329,36 @@ def greater2(ids, s, pi, assumptions=False):
     rng = range(s)
     cells = [[x, y] for x in rng for y in rng]
 
+    clauses += [[-eql_min(ids, pi, cell) for cell in cells]]
+
     for cell in cells:
         clauses += sub_grtr2(ids, pi, cell, s)
         clauses += sub_eql_min(ids, pi, cell, s)
 
     # constraints for the first cell
     clauses += [
-        [grtr(ids, [0, 0]), eql_min(ids, pi, [0, 0])] + asmp,
-        [grtr(ids, [0, 0]), r_grtr(ids, 0)] + asmp,
+        [grtr2(ids, pi, [0, 0]), eql_min(ids, pi, [0, 0])] + asmp,
+        [grtr2(ids, pi, [0, 0]), r_grtr(ids, 0)] + asmp,
     ]
 
     for i, cell in enumerate(cells):
         if i in [0, s**2 - 1]:
             continue
         r = -r_grtr(ids, i - 1)  # relaxation variable from the previous cell
-        g = grtr(ids, cell)
+        g = grtr2(ids, pi, cell)
         e = eql_min(ids, pi, cell)
 
         clauses += [[r, g, e] + asmp, [r, g, r_grtr(ids, i)] + asmp]
 
     # constraints for the last cell
-    clauses += [[-r_grtr(ids, s**2 - 2), grtr(ids, [s - 1, s - 1])] + asmp]
+    clauses += [
+        [
+            -r_grtr(ids, s**2 - 2),
+            grtr2(ids, pi, [s - 1, s - 1]),
+            eql_min(ids, pi, [s - 1, s - 1]),
+        ]
+        + asmp
+    ]
     return clauses
 
 

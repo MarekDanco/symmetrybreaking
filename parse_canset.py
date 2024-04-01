@@ -3,7 +3,7 @@
 from pysat.solvers import Solver
 from pysat.formula import IDPool
 from basics import pick_one, print_cnf, debug_model, Timer, one_hot, out, var
-from minmod import minimality
+from minmod import minimality, inv, assump
 from itertools import product
 from phi import canset_var
 from parsing import Parser, transform, ground, Const, collect, find_inv
@@ -94,7 +94,7 @@ def sub_eql_grtr(ids, cell, s):
 
 
 def greater(ids, s, sub_g, sub_e):
-    """Constraints for A>B."""
+    """Constraints for A>pi(A) where pi is a variable."""
     clauses = []
     clauses += sub_rhs(ids, s)
     rng = range(s)
@@ -159,6 +159,122 @@ def alg1(ids, phi, s):
     return perms
 
 
+def smaller_set(pi, d, s):
+    """Compute the set of values smaller than d under permutation pi."""
+    return {i for i in range(s) if pi[i] < d}
+
+
+def grtr2(ids, pi, cell):
+    return ids.id(f"grtr_{pi}_{cell}")
+
+
+def eql_grtr2(ids, pi, cell):
+    return ids.id(f"eql_{pi}_{cell}")
+
+
+def sub_grtr2(ids, pi, cell, s):
+    clauses = []
+    grt = -grtr2(ids, pi, cell)
+    inverse = inv(pi)
+    clauses += [
+        [grt, var(ids, False, "*", cell, d)]
+        + [
+            var(ids, True, "*", [inverse[arg] for arg in cell], d2)
+            for d2 in smaller_set(pi, d, s)
+        ]
+        for d in range(s)
+    ]
+    return clauses
+
+
+def sub_eql_grtr2(ids, pi, cell, s):
+    clauses = []
+    e = -eql_grtr2(ids, pi, cell)
+    inverse = inv(pi)
+    clauses += [
+        [
+            e,
+            var(ids, False, "*", cell, d),
+            var(ids, True, "*", [inverse[arg] for arg in cell], inverse[d]),
+        ]
+        for d in range(s)
+    ]
+    return clauses
+
+
+def assump2(ids, pi):
+    """Assumptions for A>pi(A) constraints."""
+    return ids.id(f"assump2_{pi}")
+
+
+def greater2(ids, s, pi, assumptions=False):
+    """Constraints for A>pi(A)."""
+    clauses = []
+    asmp = []
+    if assumptions:
+        asmp.append(assump2(ids, pi))
+    rng = range(s)
+    cells = [[x, y] for x in rng for y in rng]
+
+    clauses += [
+        [-eql_grtr2(ids, pi, cell) for cell in cells]
+    ]  # at least one pair of cells is not equal
+
+    for cell in cells:
+        clauses += sub_grtr2(ids, pi, cell, s)
+        clauses += sub_eql_grtr2(ids, pi, cell, s)
+
+    # constraints for the first cell
+    clauses += [
+        [grtr2(ids, pi, [0, 0]), eql_grtr2(ids, pi, [0, 0])] + asmp,
+        [grtr2(ids, pi, [0, 0]), r_grtr(ids, 0)] + asmp,
+    ]
+
+    for i, cell in enumerate(cells):
+        if i in [0, s**2 - 1]:
+            continue
+        r = -r_grtr(ids, i - 1)  # relaxation variable from the previous cell
+        g = grtr2(ids, pi, cell)
+        e = eql_grtr2(ids, pi, cell)
+
+        clauses += [[r, g, e] + asmp, [r, g, r_grtr(ids, i)] + asmp]
+
+    # constraints for the last cell
+    clauses += [
+        [
+            -r_grtr(ids, s**2 - 2),
+            grtr2(ids, pi, [s - 1, s - 1]),
+            eql_grtr2(ids, pi, [s - 1, s - 1]),
+        ]
+        + asmp
+    ]
+    return clauses
+
+
+def alg2(ids, phi, s, p):
+    cnf = []
+    cnf += phi
+    cells = [(x, y) for x in range(s) for y in range(s)]
+    for pi in p:
+        cnf += minimality(ids, cells, tuple(pi), s, assumptions=True)
+        cnf += greater2(ids, s, pi, assumptions=True)
+
+    solver = Solver(name="cd", bootstrap_with=cnf)
+    p_reduce = list(p)
+    for pi in p:
+        p_reduce.pop(p_reduce.index(pi))
+        asmps = (
+            [-assump2(ids, pi)]
+            + [-assump(ids, prm) for prm in p_reduce]
+            + [assump2(ids, prm) for prm in p if prm != pi]
+            + [assump(ids, prm) for prm in p if prm not in p_reduce]
+        )
+        if solver.solve(assumptions=asmps):
+            p_reduce.append(pi)  # pi is not redundant
+    solver.delete
+    return p_reduce
+
+
 def testme(inp):
     p = Parser()
     tree = p.parse(inp)
@@ -174,12 +290,11 @@ def testme(inp):
         phi += ground(ids, clause, s)
     phi += one_hot(ids, constants, inverses, s)
 
-    t = Timer()
-    t.start(text="")
-    print()
     p = alg1(ids, phi, s)
-    t.stop()
     print(p)
+
+    p2 = alg2(ids, phi, s, p)
+    print(p2)
 
 
 if __name__ == "__main__":

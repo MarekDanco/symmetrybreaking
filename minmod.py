@@ -126,8 +126,8 @@ def minimality(ids, cells, pi, s, assumptions=False):
 
         # constraints for the first cell
         clauses += [
-            [less(ids, pi, [0, 0]), equal(ids, pi, [0, 0])],
-            [less(ids, pi, [0, 0]), relax(ids, pi, 0)],
+            [less(ids, pi, [0, 0]), equal(ids, pi, [0, 0])] + asmp,
+            [less(ids, pi, [0, 0]), relax(ids, pi, 0)] + asmp,
         ]
 
         for i, cell in enumerate(cells):
@@ -137,7 +137,7 @@ def minimality(ids, cells, pi, s, assumptions=False):
             r = -relax(ids, pi, i - 1)  # relaxation variable from the previous cell
             l = less(ids, pi, cell)
             e = equal(ids, pi, cell)
-            clauses += [[r, l, e], [r, l, relax(ids, pi, i)]]
+            clauses += [[r, l, e] + asmp, [r, l, relax(ids, pi, i)] + asmp]
 
         # constraints for the last cell
         clauses += [
@@ -146,11 +146,12 @@ def minimality(ids, cells, pi, s, assumptions=False):
                 less(ids, pi, [s - 1, s - 1]),
                 equal(ids, pi, [s - 1, s - 1]),
             ]
+            + asmp
         ]
     return clauses
 
 
-def minimal(ids, s, transpositions, concentric, perms=None):
+def minimal(ids, s, transpositions, concentric, perms: list = None):
     """Compute CNF for minimal model."""
     clauses = []
     rng = range(s)
@@ -167,7 +168,7 @@ def minimal(ids, s, transpositions, concentric, perms=None):
         # skip identity permutation
         if pi == tuple([i for i in rng]):
             continue
-        clauses += minimality(ids, cells, pi, s)
+        clauses += minimality(ids, cells, tuple(pi), s)
     return clauses
 
 
