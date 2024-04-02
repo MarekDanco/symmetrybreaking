@@ -6,7 +6,7 @@ from basics import pick_one, print_cnf, debug_model, Timer, one_hot, out, var
 from minmod import minimality, inv, assump
 from itertools import product
 from phi import canset_var
-from parsing import Parser, transform, ground, Const, collect, find_inv
+from parsing import Parser, transform, ground, Const, collect, find_inv, tostr
 
 
 def perm(ids, s):
@@ -133,6 +133,12 @@ def greater(ids, s, sub_g, sub_e):
     ]
     return clauses
 
+def cs(sol):
+    t = Timer()
+    t.start()
+    rv = sol.solve()
+    t.stop()
+    return rv
 
 def alg1(ids, phi, s):
     cnf = []
@@ -144,14 +150,16 @@ def alg1(ids, phi, s):
 
     perms = []
     cells = [(x, y) for x in range(s) for y in range(s)]
-    while solver.solve():
+    while cs(solver):
         model = solver.get_model()
         out(ids, model, s)
         print()
-        prm = []  # current permutation
-        for i, d in product(range(s), repeat=2):
-            if model[canset_var(ids, True, "pi", i, d) - 1] > 0:
-                prm.append(d)
+        # prm = []  # current permutation
+        prm = tuple(d for i, d in product(range(s), repeat=2) if model[canset_var(ids, True, "pi", i, d) - 1] > 0)
+        assert len(prm) == s
+        # for i, d in product(range(s), repeat=2):
+            # if model[canset_var(ids, True, "pi", i, d) - 1] > 0:
+                # prm.append(d)
         print(prm, "\n=====")
         solver.append_formula(minimality(ids, cells, tuple(prm), s))
         perms += [prm]
@@ -262,6 +270,7 @@ def alg2(ids, phi, s, p):
     solver = Solver(name="cd", bootstrap_with=cnf)
     p_reduce = list(p)
     for pi in p:
+        print(pi)
         p_reduce.pop(p_reduce.index(pi))
         asmps = (
             [-assump2(ids, pi)]
@@ -271,6 +280,8 @@ def alg2(ids, phi, s, p):
         )
         if solver.solve(assumptions=asmps):
             p_reduce.append(pi)  # pi is not redundant
+        else:
+            print('red')
     solver.delete
     return p_reduce
 
@@ -282,13 +293,17 @@ def testme(inp):
     constants = collect(tree, Const)
     flattened = transform(tree)
 
-    s = 8
+    s = 4
     ids = IDPool()
     phi = []
+    print(tostr(flattened), flush=True)
 
+    t = Timer()
+    t.start()
     for clause in flattened.clauses:
         phi += ground(ids, clause, s)
     phi += one_hot(ids, constants, inverses, s)
+    t.stop()
 
     p = alg1(ids, phi, s)
     print(p)
@@ -298,4 +313,5 @@ def testme(inp):
 
 
 if __name__ == "__main__":
-    testme("x*y=z*w.")
+    # testme("x*y=z*w.")
+    testme("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.")
