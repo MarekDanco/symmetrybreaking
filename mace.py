@@ -6,6 +6,7 @@ from pysat.formula import IDPool
 from parsing import Parser, transform, ground, Const, collect, find_inv
 from minmod import minimal
 from basics import one_hot, out, Timer
+from parse_canset import alg1, alg2
 
 
 def testme(inp):
@@ -49,8 +50,16 @@ def testme(inp):
     cnf += one_hot(ids, constants, inverses, s)
     t.stop()
 
+    t.start(text="canonical set")
+    p = alg1(ids, cnf, s)
+    t.stop()
+
+    t.start(text="reduced canonical set")
+    p = alg2(ids, cnf, s, p)
+    t.stop()
+
     t.start(text="minimality")
-    cnf += minimal(ids, s, args.permutations, args.concentric)
+    cnf += minimal(ids, s, args.permutations, args.concentric, perms=p)
     t.stop()
 
     solver = Solver(name="cd", bootstrap_with=cnf)
@@ -69,4 +78,5 @@ def testme(inp):
 
 
 if __name__ == "__main__":
-    testme("e*x = x. x*e = x. x*x'=e. x'*x=e. x*(y*z)=(x*y)*z.")
+    # testme("e*x = x. x*e = x. x*x'=e. x'*x=e. x*(y*z)=(x*y)*z.")
+    testme("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.")
