@@ -110,11 +110,11 @@ def lnh(ids, s, cells):
 
 
 def assump(ids, pi):
-    """Assumptions for A <= pi(A) constraints."""
-    return ids.id(f"assump_{pi}")
+    """Assumptions for A<=pi(A) constraints."""
+    return ids.id(("assump", pi))
 
 
-def minimality(ids, cells, pi, s, assumptions=False):
+def minimality(ids, cells, pi: tuple, s, assumptions=False):
     """Constraints for A <= pi(A)."""
     clauses = []
     asmp = []

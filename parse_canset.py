@@ -26,7 +26,7 @@ def perm(ids, s):
 
 
 def rhs(ids, *args):
-    return ids.id(f"rhs_{args}")
+    return ids.id(("rhs", args))
 
 
 def sub_rhs(ids, s):
@@ -54,15 +54,17 @@ def sub_rhs(ids, s):
 
 def r_grtr(ids, i):
     """Variable for "following cells are greater" in A>pi(A) constraints."""
-    return ids.id(f"r_{i}")
+    return ids.id(("r", i))
 
 
 def grtr(ids, cell):
-    return ids.id(f"grtr_{cell}")
+    """Variable for "cell is greater than pi(inv(cell))" in A>pi(A) constraints."""
+    return ids.id(("grtr", tuple(cell)))
 
 
 def eql_grtr(ids, cell):
-    return ids.id(f"eqlg_{cell}")
+    """Variable for "cell is equal to pi(inv(cell))" in A>pi(A) constraints."""
+    return ids.id(("eqlg", tuple(cell)))
 
 
 def sub_grtr(ids, cell, s):
@@ -143,6 +145,7 @@ def cs(sol):
 
 
 def alg1(ids, phi, s):
+    """Compute canonical set of permutations for given problem phi."""
     cnf = []
 
     cnf += phi
@@ -156,7 +159,6 @@ def alg1(ids, phi, s):
         model = solver.get_model()
         # out(ids, model, s)
         # print()
-        # prm = []  # current permutation
         prm = tuple(
             d
             for i, d in product(range(s), repeat=2)
@@ -176,11 +178,15 @@ def smaller_set(pi, d, s):
 
 
 def grtr2(ids, pi, cell):
-    return ids.id(f"grtr_{pi}_{cell}")
+    """Variable for "cell is greater than pi(inv(cell))" in A>pi(A) constraints
+    in canonical set reduction algorithm."""
+    return ids.id(("grtr", pi, tuple(cell)))
 
 
 def eql_grtr2(ids, pi, cell):
-    return ids.id(f"eql_{pi}_{cell}")
+    """Variable for "cell is equal to pi(inv(cell))" in A>pi(A) constraints
+    in canonical set reduction algorithm."""
+    return ids.id(("eqlg", pi, tuple(cell)))
 
 
 def sub_grtr2(ids, pi, cell, s):
@@ -215,7 +221,7 @@ def sub_eql_grtr2(ids, pi, cell, s):
 
 def assump2(ids, pi):
     """Assumptions for A>pi(A) constraints."""
-    return ids.id(f"assump2_{pi}")
+    return ids.id(("assump2", pi))
 
 
 def greater2(ids, s, pi, assumptions=False):
@@ -263,6 +269,7 @@ def greater2(ids, s, pi, assumptions=False):
 
 
 def alg2(ids, phi, s, p):
+    """Reduce canonical set p."""
     cnf = []
     cnf += phi
     cells = [(x, y) for x in range(s) for y in range(s)]
@@ -293,7 +300,7 @@ def testme(inp):
     constants = collect(tree, Const)
     flattened = transform(tree)
 
-    s = 8
+    s = 3
     ids = IDPool()
     phi = []
     print(tostr(flattened), flush=True)
