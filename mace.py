@@ -15,7 +15,7 @@ def testme(inp):
         "-p",
         "--permutations",
         help="encode minimality under all permutations",
-        action="store_false",
+        action="store_true",
     )
     arg_parser.add_argument(
         "-c",
@@ -37,7 +37,7 @@ def testme(inp):
     flattened = transform(tree)
     t.stop()
 
-    s = 4
+    s = 6
     ids = IDPool()
     cnf = []
 
@@ -59,7 +59,7 @@ def testme(inp):
     t.stop()
 
     t.start(text="minimality")
-    cnf += minimal(ids, s, args.permutations, args.concentric, perms=p)
+    cnf += minimal(ids, s, args.permutations, args.concentric)
     t.stop()
 
     solver = Solver(name="cd", bootstrap_with=cnf)
