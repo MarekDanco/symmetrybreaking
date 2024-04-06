@@ -23,6 +23,11 @@ def testme(inp):
         help="encode minimality with respect to concentric ordering",
         action="store_true",
     )
+    arg_parser.add_argument(
+        "s",
+        type=int,
+        help="domain size",
+    )
     args = arg_parser.parse_args()
 
     p = Parser()
@@ -37,7 +42,7 @@ def testme(inp):
     flattened = transform(tree)
     t.stop()
 
-    s = 6
+    s = args.s
     ids = IDPool()
     cnf = []
 
@@ -50,7 +55,7 @@ def testme(inp):
     cnf += one_hot(ids, constants, inverses, s)
     t.stop()
 
-    t.start(text="canonical set")
+    t.start(text="canonical set \n")
     p = alg1(ids, cnf, s)
     t.stop()
 
@@ -59,7 +64,7 @@ def testme(inp):
     t.stop()
 
     t.start(text="minimality")
-    cnf += minimal(ids, s, args.permutations, args.concentric)
+    cnf += minimal(ids, s, args.permutations, args.concentric, perms=p)
     t.stop()
 
     solver = Solver(name="cd", bootstrap_with=cnf)
@@ -75,6 +80,7 @@ def testme(inp):
             print("unsat")
             print("===")
             break
+    solver.delete()
 
 
 if __name__ == "__main__":
