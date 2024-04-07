@@ -1,5 +1,6 @@
 """Compute the reduced canonizing set of permutations for the parsed algebra."""
 
+import argparse
 from pysat.solvers import Solver
 from pysat.formula import IDPool
 from basics import pick_one, print_cnf, debug_model, Timer, one_hot, out, var
@@ -294,13 +295,20 @@ def alg2(ids, phi, s, p):
 
 
 def testme(inp):
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument(
+        "s",
+        type=int,
+        help="domain size",
+    )
+    args = arg_parser.parse_args()
     p = Parser()
     tree = p.parse(inp)
     inverses = find_inv(tree)
     constants = collect(tree, Const)
     flattened = transform(tree)
 
-    s = 4
+    s = args.s
     ids = IDPool()
     phi = []
     print(tostr(flattened), flush=True)
