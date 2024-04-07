@@ -300,13 +300,13 @@ def testme(inp):
     constants = collect(tree, Const)
     flattened = transform(tree)
 
-    s = 3
+    s = 4
     ids = IDPool()
     phi = []
     print(tostr(flattened), flush=True)
 
     t = Timer()
-    t.start()
+    t.start(text="grounding")
     for clause in flattened.clauses:
         phi += ground(ids, clause, s)
     phi += one_hot(ids, constants, inverses, s)

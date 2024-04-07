@@ -55,7 +55,7 @@ def testme(inp):
     cnf += one_hot(ids, constants, inverses, s)
     t.stop()
 
-    t.start(text="canonical set \n")
+    t.start(text="canonical set")
     p = alg1(ids, cnf, s)
     t.stop()
 
