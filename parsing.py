@@ -5,6 +5,7 @@ from collections import namedtuple, deque
 from pyparsing import Suppress, Word, Forward, Optional, ZeroOrMore, Literal
 from itertools import product
 from basics import var
+import numpy as np
 
 
 Apply = namedtuple("Apply", ["op", "args"])  # function applications
@@ -301,14 +302,20 @@ def transform(tree):
 def get_prms(tup, lit, names):
     """Get parameters for a propositional variable."""
     sign = True if lit.op == Parser.EQ else False
-    d = tup[names[lit.args[0].name]]  # first arg in equality is always Var
+    d: np.short = tup[names[lit.args[0].name]]  # first arg in equality is always Var
     func = lit.args[1]  # second is always Term
     if isinstance(func, Const):
         op = "_"
-        args = [func.name]
+        args: Literal = func.name
     if isinstance(func, Apply):
-        op = func.op
-        args = [tup[names[arg.name]] for arg in func.args]
+        op: Literal = func.op
+        if len(func.args) == 1:
+            args: np.short = tup[names[func.args[0].name]]
+        if len(func.args) == 2:
+            args = np.array(
+                [tup[names[func.args[0].name]], tup[names[func.args[1].name]]],
+                dtype=np.short,
+            )
     return sign, op, args, d
 
 
@@ -317,7 +324,7 @@ def ground(ids, cl, s):
     clauses = []
     vars = collect(cl, Var)
     rep = len(vars)
-    vars_names = [v.name for v in vars]
+    vars_names = tuple(v.name for v in vars)
     names = {vars_names[i]: i for i in range(rep)}
 
     for tup in product(range(s), repeat=rep):
@@ -353,8 +360,6 @@ def testme(inp):
 
 
 if __name__ == "__main__":
-    testme("x*y=w | x*y = z | x!=y | y!=z | w!=z.")
-    testme("x*e=x. e*x=x. x*(y*z)=(x*y)*z. x*x'=e. x'*x=e.")
-    # testme(
-    #    "z*(x*(z*y))=((z*x)*z)*y. x*(z*(y*z))=((x*z)*y)*z. (z*x)*(y*z)=(z*(x*y))*z. (z*x)*(y*z)=z*((x*y)*z)."
-    # )
+    # testme("x*y=w | x*y = z | x!=y | y!=z | w!=z.")
+    # testme("x*e=x. e*x=x. x*(y*z)=(x*y)*z. x*x'=e. x'*x=e.")
+    testme("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.")

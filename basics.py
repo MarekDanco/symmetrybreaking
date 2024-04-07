@@ -2,6 +2,7 @@
 
 from itertools import product
 import time
+import numpy as np
 
 
 class TimerError(Exception):
@@ -89,11 +90,11 @@ def out(ids, model, s):
 def var(ids, sign, op, args, d):
     """Return propositional variable for equality of terms."""
     if op == "*":
-        rv = ids.id(f"{args[0]}*{args[1]}={d}")
+        rv = ids.id(("*", args[0], args[1], d))
     if op == "_":  # constants
-        rv = ids.id(f"{args[0]}={d}")
+        rv = ids.id(("_", args, d))
     if op == "'":
-        rv = ids.id(f"{args[0]}'={d}")
+        rv = ids.id(("'", args, d))
     return rv if sign else -rv
 
 
@@ -114,12 +115,14 @@ def one_hot(ids, constants, inverses: bool, s):
 
     # *
     for x, y in product(rng, repeat=2):
-        clauses += pick_one([var(ids, True, "*", [x, y], d) for d in rng])
+        clauses += pick_one(
+            [var(ids, True, "*", np.array([x, y], dtype=np.short), d) for d in rng]
+        )
     # '
     if inverses:
         for x in rng:
-            clauses += pick_one([var(ids, True, "'", [x], d) for d in rng])
+            clauses += pick_one([var(ids, True, "'", x, d) for d in rng])
     # constants
     for cnst in constants:
-        clauses += pick_one([var(ids, True, "_", [cnst.name], d) for d in rng])
+        clauses += pick_one([var(ids, True, "_", cnst.name, d) for d in rng])
     return clauses
