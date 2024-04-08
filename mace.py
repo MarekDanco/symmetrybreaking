@@ -3,9 +3,9 @@
 import argparse
 from pysat.solvers import Solver
 from pysat.formula import IDPool
-from parsing import Parser, transform, ground, Const, collect, find_inv
+from parsing import Parser, Grounding, transform, Const, collect, find_inv
 from minmod import minimal
-from basics import one_hot, out, Timer
+from basics import out, Timer
 from parse_canset import alg1, alg2
 
 
@@ -47,12 +47,13 @@ def testme(inp):
     cnf = []
 
     t.start(text="grounding")
+    g = Grounding(s, ids)
     for clause in flattened.clauses:
-        cnf += ground(ids, clause, s)
+        cnf += g.ground(clause)
     t.stop()
 
     t.start(text="1-hot")
-    cnf += one_hot(ids, constants, inverses, s)
+    cnf += g.one_hot(constants, inverses)
     t.stop()
 
     t.start(text="canonical set")
@@ -74,7 +75,7 @@ def testme(inp):
         print("===", counter, flush=True)
         if solver.solve():
             model = solver.get_model()
-            cl = out(ids, model, s)
+            cl = out(ids, model, s, g.pairs)
             solver.add_clause(cl)  # find a new model
         else:
             print("unsat")

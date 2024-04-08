@@ -3,11 +3,19 @@
 import argparse
 from pysat.solvers import Solver
 from pysat.formula import IDPool
-from basics import pick_one, print_cnf, debug_model, Timer, one_hot, out, var
+from basics import pick_one, print_cnf, debug_model, Timer, out, var
 from minmod import minimality, inv, assump
 from itertools import product
 from phi import canset_var
-from parsing import Parser, transform, ground, Const, collect, find_inv, tostr
+from parsing import (
+    Parser,
+    Grounding,
+    transform,
+    Const,
+    collect,
+    find_inv,
+    tostr,
+)
 
 
 def perm(ids, s):
@@ -138,10 +146,10 @@ def greater(ids, s, sub_g, sub_e):
 
 
 def cs(sol):
-    t = Timer()
-    t.start(text="SAT call")
+    # t = Timer()
+    # t.start(text="SAT call")
     rv = sol.solve()
-    t.stop()
+    # t.stop()
     return rv
 
 
@@ -158,7 +166,7 @@ def alg1(ids, phi, s):
     cells = [(x, y) for x in range(s) for y in range(s)]
     while cs(solver):
         model = solver.get_model()
-        # out(ids, model, s)
+        # out(ids, model, s, cells)
         # print()
         prm = tuple(
             d
@@ -167,7 +175,7 @@ def alg1(ids, phi, s):
         )
         assert len(prm) == s
         # print(prm, "\n=====")
-        solver.append_formula(minimality(ids, cells, tuple(prm), s))
+        solver.append_formula(minimality(ids, cells, prm, s))
         perms += [prm]
     solver.delete()
     return perms
@@ -315,9 +323,10 @@ def testme(inp):
 
     t = Timer()
     t.start(text="grounding")
+    g = Grounding(s, ids)
     for clause in flattened.clauses:
-        phi += ground(ids, clause, s)
-    phi += one_hot(ids, constants, inverses, s)
+        phi += g.ground(clause)
+    phi += g.one_hot(constants, inverses)
     t.stop()
 
     p = alg1(ids, phi, s)
@@ -328,5 +337,5 @@ def testme(inp):
 
 
 if __name__ == "__main__":
-    # testme("x*y=z*w.")
-    testme("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.")
+    testme("x*y=z*w.")
+    # testme("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.")

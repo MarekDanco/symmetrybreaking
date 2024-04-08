@@ -1,8 +1,7 @@
-"""Functions for printing and basic cnf encodings."""
+"""Functions for printing and basic MACE encodings."""
 
 from itertools import product
 import time
-import numpy as np
 
 
 class TimerError(Exception):
@@ -37,7 +36,7 @@ class Timer:
 def var2str(ids, var):
     """Print nicely a CNF var."""
     obj = ids.obj(var)
-    return obj if obj is not None else "#" + str(var)
+    return str(obj) if obj is not None else "#" + str(var)
 
 
 def lit2str(ids, lit):
@@ -72,15 +71,14 @@ def print_cnf(ids, cnf):
     print("]")
 
 
-def out(ids, model, s):
+def out(ids, model, s, pairs):
     """Print the function table and return a clause blocking the current model."""
     cl = []
     rng = range(s)
-
     for x, y in product(rng, repeat=2):
         for d in rng:
-            if model[var(ids, True, "*", [x, y], d) - 1] > 0:
-                cl.append(var(ids, False, "*", [x, y], d))
+            if model[var(ids, True, "*", pairs[s * x + y], d) - 1] > 0:
+                cl.append(var(ids, False, "*", pairs[s * x + y], d))
                 print(d, end=" ", flush=True)
         if y == s - 1:
             print()
@@ -106,23 +104,3 @@ def pick_one(lits):
 def at_most_one(lits):
     """At most one of the lits is true."""
     return [[-v1, -v2] for v1 in lits for v2 in lits if v1 < v2]
-
-
-def one_hot(ids, constants, inverses: bool, s):
-    """Ensure 1-hot of all functions."""
-    clauses = []
-    rng = range(s)
-
-    # *
-    for x, y in product(rng, repeat=2):
-        clauses += pick_one(
-            [var(ids, True, "*", np.array([x, y], dtype=np.short), d) for d in rng]
-        )
-    # '
-    if inverses:
-        for x in rng:
-            clauses += pick_one([var(ids, True, "'", x, d) for d in rng])
-    # constants
-    for cnst in constants:
-        clauses += pick_one([var(ids, True, "_", cnst.name, d) for d in rng])
-    return clauses
