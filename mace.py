@@ -72,14 +72,14 @@ def testme(inp):
     counter = 0
     while True:
         counter += 1
-        print("===", counter, flush=True)
-        if solver.solve():
+        t.start(out=False)
+        sat = solver.solve()
+        time = t.stop(out=False)
+        if sat:
             model = solver.get_model()
-            cl = out(ids, model, s, g.pairs)
+            cl = out(ids, model, s, g.pairs, counter, time)
             solver.add_clause(cl)  # find a new model
         else:
-            print("unsat")
-            print("===")
             break
     solver.delete()
 

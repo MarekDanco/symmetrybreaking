@@ -145,15 +145,7 @@ def greater(ids, s, sub_g, sub_e):
     return clauses
 
 
-def cs(sol):
-    # t = Timer()
-    # t.start(text="SAT call")
-    rv = sol.solve()
-    # t.stop()
-    return rv
-
-
-def alg1(ids, phi, s):
+def alg1(ids, phi, s, main=False):
     """Compute canonical set of permutations for given problem phi."""
     cnf = []
 
@@ -164,17 +156,28 @@ def alg1(ids, phi, s):
 
     perms = []
     cells = [(x, y) for x in range(s) for y in range(s)]
-    while cs(solver):
-        model = solver.get_model()
-        # out(ids, model, s, cells)
-        # print()
+    counter = 0
+    t = Timer()
+    while True:
+        counter += 1
+        t.start(out=False)
+        sat = solver.solve()
+        time = t.stop(out=False)
+        if sat:
+            model = solver.get_model()
+            if main:
+                out(ids, model, s, cells, counter, time)
+                print()
+        else:
+            break
         prm = tuple(
             d
             for i, d in product(range(s), repeat=2)
             if model[canset_var(ids, True, "pi", i, d) - 1] > 0
         )
         assert len(prm) == s
-        # print(prm, "\n=====")
+        if main:
+            print(prm, "\n=====")
         solver.append_formula(minimality(ids, cells, prm, s))
         perms += [prm]
     solver.delete()
@@ -329,7 +332,7 @@ def testme(inp):
     phi += g.one_hot(constants, inverses)
     t.stop()
 
-    p = alg1(ids, phi, s)
+    p = alg1(ids, phi, s, main=True)
     print(p)
 
     p2 = alg2(ids, phi, s, p)
@@ -337,5 +340,5 @@ def testme(inp):
 
 
 if __name__ == "__main__":
-    testme("x*y=z*w.")
-    # testme("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.")
+    # testme("x*y=z*w.")
+    testme("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.")

@@ -14,22 +14,24 @@ class Timer:
     def __init__(self) -> None:
         self._start_time = None
 
-    def start(self, text="elapsed time"):
+    def start(self, text="elapsed time", out=True):
         """Start a new timer."""
         if self._start_time is not None:
             raise TimerError(f"Timer is running. Use .stop() to stop it")
 
         self._start_time = time.perf_counter()
-        print(f"{text}: ", end="", flush=True)
+        if out:
+            print(f"{text}: ", end="", flush=True)
 
-    def stop(self):
+    def stop(self, out=True):
         """Stop the timer, and report the elapsed time."""
         if self._start_time is None:
             raise TimerError(f"Timer is not running. Use .start() to start it")
 
         elapsed_time = time.perf_counter() - self._start_time
         self._start_time = None
-        print(f"{elapsed_time:.5f} seconds")
+        if out:
+            print(f"{elapsed_time:.4f} seconds")
         return elapsed_time
 
 
@@ -71,10 +73,11 @@ def print_cnf(ids, cnf):
     print("]")
 
 
-def out(ids, model, s, pairs):
+def out(ids, model, s, pairs, counter, time):
     """Print the function table and return a clause blocking the current model."""
     cl = []
     rng = range(s)
+    print(f"model: {counter}, time: {time:.4f} seconds", flush=True)
     for x, y in product(rng, repeat=2):
         for d in rng:
             if model[var(ids, True, "*", pairs[s * x + y], d) - 1] > 0:
