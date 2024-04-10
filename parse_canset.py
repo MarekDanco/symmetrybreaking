@@ -316,7 +316,7 @@ def testme(inp):
     p = Parser()
     tree = p.parse(inp)
     inverses = find_inv(tree)
-    constants = collect(tree, Const)
+    constants = set(sorted(collect(tree, Const)))
     flattened = transform(tree)
 
     s = args.s

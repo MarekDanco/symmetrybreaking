@@ -10,6 +10,8 @@ from parse_canset import alg1, alg2
 
 
 def testme(inp):
+    tot = Timer()
+    tot.start(out=False)
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument(
         "-p",
@@ -36,7 +38,7 @@ def testme(inp):
     tree = p.parse(inp)
     t.stop()
     inverses = find_inv(tree)
-    constants = collect(tree, Const)
+    constants = set(sorted(collect(tree, Const)))
 
     t.start(text="flattening")
     flattened = transform(tree)
@@ -82,6 +84,7 @@ def testme(inp):
         else:
             break
     solver.delete()
+    print(f"total time: {tot.stop(out=False)}")
 
 
 if __name__ == "__main__":

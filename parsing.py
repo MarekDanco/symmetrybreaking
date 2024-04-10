@@ -8,9 +8,9 @@ from basics import var, pick_one, print_cnf
 from pysat.formula import IDPool
 
 
-Apply = namedtuple("Apply", ["op", "args"])  # function applications
-Var = namedtuple("Var", ["name"])  # variable nodes
-Const = namedtuple("Const", ["name"])  # constants
+Apply = namedtuple("Apply", ["op", "args", "tag"])  # function applications, tag = 0
+Var = namedtuple("Var", ["name", "tag"])  # variable nodes, tag = 1
+Const = namedtuple("Const", ["name", "tag"])  # constants, tag = 2
 Clause = namedtuple("Clause", ["literals"])
 CNF = namedtuple("CNF", ["clauses"])
 
@@ -22,9 +22,9 @@ def mk_pref(_string, _location, tokens):
         return tokens
     if len(tokens) == 2:
         a, b = tokens
-        return Apply(op=b, args=[a])
+        return Apply(op=b, args=[a], tag=0)
     a, b, c = tokens
-    return Apply(op=b, args=[a, c])
+    return Apply(op=b, args=[a, c], tag=0)
 
 
 class Parser:
@@ -34,8 +34,10 @@ class Parser:
     EQ, NEQ, PRIME, ASTERISK = map(Literal, ["=", "!=", "'", "*"])
 
     def __init__(self):
-        var = Word("wxyz").set_parse_action(lambda s, loc, ts: Var(ts[0]))
-        const = Word("cdefg").set_parse_action(lambda s, loc, ts: Const(ts[0]))
+        var = Word("wxyz").set_parse_action(lambda s, loc, ts: Var(name=ts[0], tag=1))
+        const = Word("cdefg").set_parse_action(
+            lambda s, loc, ts: Const(name=ts[0], tag=2)
+        )
         term = Forward()
         leaf = var | const
         inversion = (leaf + Optional(Parser.PRIME)).set_parse_action(mk_pref)
@@ -48,9 +50,9 @@ class Parser:
         lit = bin_op
         clause = (
             lit + ZeroOrMore(Parser.VERTICAL + lit) + Parser.DOT
-        ).set_parse_action(lambda s, loc, ts: Clause(list(ts)))
+        ).set_parse_action(lambda s, loc, ts: Clause(literals=list(ts)))
         self.clauses = ZeroOrMore(clause).set_parse_action(
-            lambda s, loc, ts: CNF(list(ts))
+            lambda s, loc, ts: CNF(clauses=list(ts))
         )
 
     def parse(self, string):
@@ -116,13 +118,13 @@ def tostr(t):
 
 def get_var(pos, count):
     """Return new variable for rewriting."""
-    return Var(f"<{pos},{count}>")
+    return Var(name=f"<{pos},{count}>", tag=1)
 
 
 def get_terms(lit):
     """Return terms of Apply so that the first one is Var if possible."""
     term1, term2 = lit.args
-    if isinstance(term2, Var):
+    if term2.tag == 1:
         term1, term2 = term2, term1
     return term1, term2
 
@@ -130,12 +132,12 @@ def get_terms(lit):
 def shallow(lit):
     """Check shallow literals of the form 2 from paradoxpaper."""
     term1, term2 = get_terms(lit)
-    if isinstance(term1, Var):
-        if isinstance(term2, Const):
+    if term1.tag == 1:
+        if term2.tag == 2:
             return True
-        if isinstance(term2, Apply):
+        if term2.tag == 0:
             for arg in term2.args:
-                if not isinstance(arg, Var):
+                if arg.tag != 1:
                     return False
             return True
     return False
@@ -145,9 +147,9 @@ def shallow3(lit):
     """Check shallow literals of the form 3 from paradoxpaper.
     Return values: 1 -> x!=y, 2 -> possibly form 2, 3 -> form 3."""
     term1, term2 = get_terms(lit)
-    if isinstance(term1, Var):
-        if isinstance(term2, Var):
-            if lit.op == Parser.EQ:
+    if term1.tag == 1:
+        if term2.tag == 1:
+            if lit.op == "=":
                 return 3
             return 1
     return 2
@@ -156,7 +158,7 @@ def shallow3(lit):
 def var_first(lit):
     """Transform a shallow literal to the form "Var=Term"."""
     term1, term2 = get_terms(lit)
-    return Apply(op=lit.op, args=[term1, term2])
+    return Apply(op=lit.op, args=[term1, term2], tag=0)
 
 
 class Flatten:
@@ -176,18 +178,18 @@ class Flatten:
         """Rewrite subterm of literal with a new variable."""
         term1, term2 = get_terms(lit)
         for i, arg in enumerate(term2.args):
-            if not isinstance(arg, Var):
+            if arg.tag != 1:
                 arg_hash = tostr(arg)
                 if arg_hash in self.rewritten_terms:
                     v = self.rewritten_terms[arg_hash]
                     term2.args[i] = v
-                    l = Apply(op=lit.op, args=[term1, term2])
+                    l = Apply(op=lit.op, args=[term1, term2], tag=0)
                     return l
                 else:
                     v = self.update_atrbs(pos, index, arg_hash)
-                    l1 = Apply(op="!=", args=[v, term2.args[i]])
+                    l1 = Apply(op="!=", args=[v, term2.args[i]], tag=0)
                     term2.args[i] = v
-                    l2 = Apply(op=lit.op, args=[term1, term2])
+                    l2 = Apply(op=lit.op, args=[term1, term2], tag=0)
                     return l2, l1
         print(lit, type(lit).__name__)
         assert False
@@ -206,13 +208,13 @@ class Flatten:
                 cl.literals.append(top)
             else:
                 term1, term2 = get_terms(top)
-                if isinstance(term1, Var):
+                if term1.tag == 1:
                     x = self.rewrite(top, pos, self.var_index)
                     q.append(x) if isinstance(x, Apply) else q.extend(x)
                 else:  # none of the terms is Var
                     v = self.update_atrbs(pos, self.var_index, tostr(term2))
-                    q.append(Apply(op=top.op, args=[v, term1]))
-                    q.append(Apply(op="!=", args=[v, term2]))
+                    q.append(Apply(op=top.op, args=[v, term1], tag=0))
+                    q.append(Apply(op="!=", args=[v, term2], tag=0))
         return cl
 
 
@@ -313,14 +315,14 @@ class Grounding:
 
     def get_prms(self, tup, lit, names):
         """Get parameters for a propositional variable."""
-        sign = True if lit.op == Parser.EQ else False
+        sign = lit.op == "="
         d = tup[names[lit.args[0].name]]  # first arg in equality is always Var
         func = lit.args[1]  # second is always Term
-        if isinstance(func, Const):
+        if func.tag == 2:
             op = "_"
-            args: Literal = func.name
-        if isinstance(func, Apply):
-            op: Literal = func.op
+            args = func.name
+        if func.tag == 0:
+            op = func.op
             if len(func.args) == 1:
                 args = tup[names[func.args[0].name]]
             if len(func.args) == 2:
@@ -332,9 +334,9 @@ class Grounding:
     def ground(self, cl):
         """Ground a clause with elements of domain of size s."""
         clauses = []
-        vars = collect(cl, Var)
+        vars = set(sorted(collect(cl, Var)))
         rep = len(vars)
-        vars_names = tuple(v.name for v in vars)
+        vars_names = tuple(sorted([v.name for v in vars]))
         names = {vars_names[i]: i for i in range(rep)}
 
         for tup in product(range(self.s), repeat=rep):
@@ -386,16 +388,7 @@ def testme(inp):
 
     print("input:")
     print(tostr(tree))
-    flattened = transform(tree)
-    print("flattened:")
-    print(f"{tostr(flattened)}\n")
-
-    cnf = []
-    ids = IDPool()
-    g = Grounding(3, ids)
-    for clause in flattened.clauses:
-        cnf += g.ground(clause)
-    print_cnf(ids, cnf)
+    print(sorted(collect(tree, Var)))
 
 
 if __name__ == "__main__":
