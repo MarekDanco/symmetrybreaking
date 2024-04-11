@@ -10,8 +10,8 @@ from parse_canset import alg1, alg2
 
 
 def testme(inp):
-    tot = Timer()
-    tot.start(out=False)
+    total = Timer()
+    total.start(out=False)
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument(
         "-p",
@@ -84,9 +84,14 @@ def testme(inp):
         else:
             break
     solver.delete()
-    print(f"total time: {tot.stop(out=False)}")
+    secs = total.stop(out=False)
+    if secs < 60:
+        return print(f"total time: {secs:.4f} seconds")
+    mins = secs // 60
+    secs %= 60
+    word = "minute" if mins == 1 else "minutes"
+    print(f"total time: {mins:.0f} {word} {secs:.4f} seconds")
 
 
-if __name__ == "__main__":
-    # testme("e*x = x. x*e = x. x*x'=e. x'*x=e. x*(y*z)=(x*y)*z.")
-    testme("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.")
+# testme("e*x = x. x*e = x. x*x'=e. x'*x=e. x*(y*z)=(x*y)*z.")
+testme("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.")
