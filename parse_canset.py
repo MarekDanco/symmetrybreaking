@@ -3,7 +3,7 @@
 import argparse
 from pysat.solvers import Solver
 from pysat.formula import IDPool
-from basics import pick_one, print_cnf, debug_model, Timer, out, var
+from basics import pick_one, print_cnf, debug_model, Timer, out, var_enc
 from minmod import minimality, inv, assump
 from itertools import product
 from grounding import Grounding
@@ -52,7 +52,7 @@ def sub_rhs(ids, s):
             [-rhs(ids, x, i, j, y, k, l), canset_var(ids, True, "pi", y, x)],
             [-rhs(ids, x, i, j, y, k, l), canset_var(ids, True, "pi", k, i)],
             [-rhs(ids, x, i, j, y, k, l), canset_var(ids, True, "pi", l, j)],
-            [-rhs(ids, x, i, j, y, k, l), var(ids, True, "*", [k, l], y)],
+            [-rhs(ids, x, i, j, y, k, l), var_enc(s, True, k, l, y)],
         ]
         clauses += [
             [
@@ -60,7 +60,7 @@ def sub_rhs(ids, s):
                 canset_var(ids, False, "pi", y, x),
                 canset_var(ids, False, "pi", k, i),
                 canset_var(ids, False, "pi", l, j),
-                var(ids, False, "*", [k, l], y),
+                var_enc(s, False, k, l, y),
             ]
         ]
     return clauses
@@ -86,7 +86,7 @@ def sub_grtr(ids, cell, s):
     clauses = []
     grt = -grtr(ids, cell)
     clauses += [
-        [grt, var(ids, False, "*", cell, x)]
+        [grt, var_enc(s, False, cell[0], cell[1], x)]
         + [
             rhs(ids, d, cell[0], cell[1], y, k, l)
             for d, y, k, l in product(rng, repeat=4)
@@ -102,7 +102,7 @@ def sub_eql_grtr(ids, cell, s):
     clauses = []
     eq = -eql_grtr(ids, cell)
     clauses += [
-        [eq, var(ids, False, "*", cell, x)]
+        [eq, var_enc(s, False, cell[0], cell[1], x)]
         + [rhs(ids, x, cell[0], cell[1], y, k, l) for y, k, l in product(rng, repeat=3)]
         for x in rng
     ]
@@ -171,7 +171,7 @@ def alg1(ids, phi, s, main=False):
         if sat:
             model = solver.get_model()
             if main:
-                out(ids, model, s, cells, counter, time)
+                out(model, s, counter, time)
                 print()
         else:
             break
@@ -211,9 +211,9 @@ def sub_grtr2(ids, pi, cell, s):
     grt = -grtr2(ids, pi, cell)
     inverse = inv(pi)
     clauses += [
-        [grt, var(ids, False, "*", cell, d)]
+        [grt, var_enc(s, False, cell[0], cell[1], d)]
         + [
-            var(ids, True, "*", [inverse[arg] for arg in cell], d2)
+            var_enc(s, True, inverse[cell[0]], inverse[cell[1]], d2)
             for d2 in smaller_set(pi, d, s)
         ]
         for d in range(s)
@@ -228,8 +228,8 @@ def sub_eql_grtr2(ids, pi, cell, s):
     clauses += [
         [
             e,
-            var(ids, False, "*", cell, d),
-            var(ids, True, "*", [inverse[arg] for arg in cell], inverse[d]),
+            var_enc(s, False, cell[0], cell[1], d),
+            var_enc(s, True, inverse[cell[0]], inverse[cell[1]], inverse[d]),
         ]
         for d in range(s)
     ]
@@ -325,7 +325,7 @@ def testme(inp):
     flattened = transform(tree)
 
     s = args.s
-    ids = IDPool()
+    ids = IDPool(occupied=[[1, s**3]])
     phi = []
     print(tostr(flattened), flush=True)
 
@@ -333,6 +333,7 @@ def testme(inp):
     t.start(text="grounding")
     g = Grounding(s, ids)
     phi += g.ground(flattened)
+    # return print_cnf(ids, phi, s)
     phi += g.one_hot(constants, inverses)
     t.stop()
 
@@ -345,4 +346,5 @@ def testme(inp):
 
 if __name__ == "__main__":
     # testme("x*y=z*w.")
+    # testme("e*x = x. x*e = x. x*x'=e. x'*x=e. x*(y*z)=(x*y)*z.")
     testme("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.")

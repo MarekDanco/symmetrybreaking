@@ -46,7 +46,7 @@ def testme(inp):
     t.stop()
 
     s = args.s
-    ids = IDPool()
+    ids = IDPool(occupied=[[1, s**3]])
     cnf = []
 
     t.start(text="grounding")
@@ -79,7 +79,7 @@ def testme(inp):
         time = t.stop(out=False)
         if sat:
             model = solver.get_model()
-            cl = out(ids, model, s, g.pairs, counter, time)
+            cl = out(model, s, counter, time)
             solver.add_clause(cl)  # find a new model
         else:
             break

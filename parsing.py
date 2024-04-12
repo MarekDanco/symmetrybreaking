@@ -3,9 +3,6 @@
 from copy import deepcopy
 from collections import namedtuple, deque
 from pyparsing import Suppress, Word, Forward, Optional, ZeroOrMore, Literal
-from itertools import product
-from basics import var, pick_one, print_cnf
-from pysat.formula import IDPool
 
 
 Apply = namedtuple("Apply", ["op", "args", "tag"])  # function applications, tag = 0

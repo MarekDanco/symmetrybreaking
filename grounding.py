@@ -2,7 +2,7 @@
 
 from parsing import shallow3, collect, Var, get_terms
 from itertools import product
-from basics import pick_one, var
+from basics import pick_one, var, var_enc
 
 
 class Grounding:
@@ -11,7 +11,7 @@ class Grounding:
     def __init__(self, s: int, ids) -> None:
         self.s = s
         rng = range(s)
-        self.pairs = {self.s * x + y: (x, y) for x in rng for y in rng}
+        # self.pairs = {self.s * x + y: (x, y) for x in rng for y in rng}
         self.ids = ids
 
     def get_prms(self, tup, lit, names):
@@ -29,7 +29,8 @@ class Grounding:
             if len(func.args) == 2:
                 x = tup[names[func.args[0].name]]
                 y = tup[names[func.args[1].name]]
-                args = self.pairs[self.s * x + y]
+                # args = self.pairs[self.s * x + y]
+                return var_enc(self.s, sign, x, y, d)
         return sign, op, args, d
 
     def ground_cl(self, cl):
@@ -53,8 +54,12 @@ class Grounding:
                     else:
                         add_lit = False
                 if add_lit:  # dont append if x!=y
-                    sign, op, args, d = self.get_prms(tup, lit, names)
-                    gr.append(var(self.ids, sign, op, args, d))
+                    prms = self.get_prms(tup, lit, names)
+                    if isinstance(prms, tuple):
+                        sign, op, args, d = prms
+                        gr.append(var(self.ids, sign, op, args, d))
+                    else:
+                        gr.append(prms)
             if add_gr:  # dont add grounding if x=y
                 clauses += [gr]
         return clauses
@@ -73,9 +78,7 @@ class Grounding:
 
         # *
         for x, y in product(rng, repeat=2):
-            clauses += pick_one(
-                [var(self.ids, True, "*", self.pairs[self.s * x + y], d) for d in rng]
-            )
+            clauses += pick_one([var_enc(self.s, True, x, y, d) for d in rng])
         # '
         if inverses:
             for x in rng:

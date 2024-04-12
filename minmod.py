@@ -1,6 +1,6 @@
 """Functions for encoding model minimality with respect to some ordering."""
 
-from basics import var, print_cnf
+from basics import var, print_cnf, var_enc
 from itertools import permutations, product
 from pysat.formula import IDPool
 
@@ -49,12 +49,14 @@ def sub_l(ids, pi, cell, s):
     l = -less(ids, pi, cell)
     inverse = inv(pi)
     if (pi[cell[0]] == cell[0]) and (pi[cell[1]] == cell[1]):
-        clauses += [[l] + [var(ids, True, "*", cell, d) for d in smaller_values(pi)]]
+        clauses += [
+            [l] + [var_enc(s, True, cell[0], cell[1], d) for d in smaller_values(pi)]
+        ]
     else:
         clauses += [
-            [l, var(ids, False, "*", cell, d)]
+            [l, var_enc(s, False, cell[0], cell[1], d)]
             + [
-                var(ids, True, "*", [inverse[arg] for arg in cell], d2)
+                var_enc(s, True, inverse[cell[0]], inverse[cell[1]], d2)
                 for d2 in larger_set(pi, d)
             ]
             for d in range(s)
@@ -68,13 +70,15 @@ def sub_e(ids, pi, cell, s):
     e = -equal(ids, pi, cell)
     inverse = inv(pi)
     if (pi[cell[0]] == cell[0]) and (pi[cell[1]] == cell[1]):
-        clauses += [[e] + [var(ids, True, "*", cell, d) for d in equal_values(pi)]]
+        clauses += [
+            [e] + [var_enc(s, True, cell[0], cell[1], d) for d in equal_values(pi)]
+        ]
     else:
         clauses += [
             [
                 e,
-                var(ids, False, "*", cell, d),
-                var(ids, True, "*", [inverse[arg] for arg in cell], inverse[d]),
+                var_enc(s, False, cell[0], cell[1], d),
+                var_enc(s, True, inverse[cell[0]], inverse[cell[1]], inverse[d]),
             ]
             for d in range(s)
         ]
@@ -103,8 +107,8 @@ def lnh(ids, s, cells):
             break
         for d in range(layer + 2, s):
             clauses += [
-                [var(ids, False, "*", cell, d)]
-                + [var(ids, True, "*", cells[j], d - 1) for j in range(i)]
+                [var_enc(s, False, cell[0], cell[1], d)]
+                + [var_enc(s, True, cells[j][0], cells[j][1], d - 1) for j in range(i)]
             ]
     return clauses
 

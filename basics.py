@@ -35,15 +35,24 @@ class Timer:
         return elapsed_time
 
 
-def var2str(ids, var):
+def decode(var, s):
+    var -= 1
+    x = var // s**2
+    var %= s**2
+    y = var // s
+    var %= s
+    return f"{x}*{y}={var}"
+
+
+def var2str(ids, var, s):
     """Print nicely a CNF var."""
     obj = ids.obj(var)
-    return str(obj) if obj is not None else "#" + str(var)
+    return str(obj) if obj is not None else decode(var, s)
 
 
-def lit2str(ids, lit):
+def lit2str(ids, lit, s):
     """Print nicely a CNF literal."""
-    return ("-" if lit < 0 else "+") + "{" + "".join(var2str(ids, abs(lit))) + "}"
+    return ("-" if lit < 0 else "+") + "{" + "".join(var2str(ids, abs(lit), s)) + "}"
 
 
 def debug_model(ids, model, s):
@@ -56,42 +65,50 @@ def debug_model(ids, model, s):
     print("]")
 
 
-def prn_clause(ids, clause):
+def prn_clause(ids, clause, s):
     """Print nicely a CNF clause."""
 
     if isinstance(clause, int):
-        print("ERROR:", lit2str(ids, clause))
+        print("ERROR:", lit2str(ids, clause, s))
     else:
-        print("[", " ".join([lit2str(ids, lit) for lit in clause]), "]")
+        print("[", " ".join([lit2str(ids, lit, s) for lit in clause]), "]")
 
 
-def print_cnf(ids, cnf):
+def print_cnf(ids, cnf, s):
     """Print nicely a CNF."""
     print("[")
     for clause in cnf:
-        prn_clause(ids, clause)
+        prn_clause(ids, clause, s)
     print("]")
 
 
-def out(ids, model, s, pairs, counter, time):
+def out(model, s, counter, time):
     """Print the function table and return a clause blocking the current model."""
     cl = []
     rng = range(s)
     print(f"model: {counter}, time: {time:.4f} seconds", flush=True)
     for x, y in product(rng, repeat=2):
         for d in rng:
-            if model[var(ids, True, "*", pairs[s * x + y], d) - 1] > 0:
-                cl.append(var(ids, False, "*", pairs[s * x + y], d))
+            enc = var_enc(s, True, x, y, d)
+            if model[enc - 1] > 0:
+                cl.append(-enc)
                 print(d, end=" ", flush=True)
         if y == s - 1:
             print()
     return cl
 
 
+def var_enc(s, sign, x, y, d):
+    """Propositional variable for "*" operation."""
+    rv = x * s**2 + y * s + d + 1
+    return rv if sign else -rv
+
+
 def var(ids, sign, op, args, d):
     """Return propositional variable for equality of terms."""
     if op == "*":
-        rv = ids.id(("*", args[0], args[1], d))
+        # rv = ids.id(("*", args[0], args[1], d))
+        assert False
     if op == "_":  # constants
         rv = ids.id(("_", args, d))
     if op == "'":
