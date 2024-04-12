@@ -3,7 +3,8 @@
 import argparse
 from pysat.solvers import Solver
 from pysat.formula import IDPool
-from parsing import Parser, Grounding, transform, Const, collect, find_inv
+from parsing import Parser, transform, Const, collect, find_inv
+from grounding import Grounding
 from minmod import minimal
 from basics import out, Timer
 from parse_canset import alg1, alg2
@@ -50,8 +51,7 @@ def testme(inp):
 
     t.start(text="grounding")
     g = Grounding(s, ids)
-    for clause in flattened.clauses:
-        cnf += g.ground(clause)
+    cnf += g.ground(flattened)
     t.stop()
 
     t.start(text="1-hot")

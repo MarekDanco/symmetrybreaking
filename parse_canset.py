@@ -6,16 +6,21 @@ from pysat.formula import IDPool
 from basics import pick_one, print_cnf, debug_model, Timer, out, var
 from minmod import minimality, inv, assump
 from itertools import product
-from phi import canset_var
+from grounding import Grounding
 from parsing import (
     Parser,
-    Grounding,
     transform,
     Const,
     collect,
     find_inv,
     tostr,
 )
+
+
+def canset_var(ids, sign, op, args, d):
+    """Propositional variable for equality of terms."""
+    rv = ids.id(f"{op}_{args}={d}")
+    return rv if sign else -rv
 
 
 def perm(ids, s):
@@ -327,8 +332,7 @@ def testme(inp):
     t = Timer()
     t.start(text="grounding")
     g = Grounding(s, ids)
-    for clause in flattened.clauses:
-        phi += g.ground(clause)
+    phi += g.ground(flattened)
     phi += g.one_hot(constants, inverses)
     t.stop()
 
