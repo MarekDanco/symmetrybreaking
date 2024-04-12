@@ -307,11 +307,8 @@ class Grounding:
     def __init__(self, s: int, ids) -> None:
         self.s = s
         rng = range(s)
-        self.pairs = {self.encode(x, y): (x, y) for x in rng for y in rng}
+        self.pairs = {self.s * x + y: (x, y) for x in rng for y in rng}
         self.ids = ids
-
-    def encode(self, x, y):
-        return self.s * x + y
 
     def get_prms(self, tup, lit, names):
         """Get parameters for a propositional variable."""
@@ -328,7 +325,7 @@ class Grounding:
             if len(func.args) == 2:
                 x = tup[names[func.args[0].name]]
                 y = tup[names[func.args[1].name]]
-                args = self.pairs[self.encode(x, y)]
+                args = self.pairs[self.s * x + y]
         return sign, op, args, d
 
     def ground(self, cl):
@@ -366,10 +363,7 @@ class Grounding:
         # *
         for x, y in product(rng, repeat=2):
             clauses += pick_one(
-                [
-                    var(self.ids, True, "*", self.pairs[self.encode(x, y)], d)
-                    for d in rng
-                ]
+                [var(self.ids, True, "*", self.pairs[self.s * x + y], d) for d in rng]
             )
         # '
         if inverses:
@@ -389,9 +383,14 @@ def testme(inp):
     print("input:")
     print(tostr(tree))
     print(sorted(collect(tree, Var)))
+    cl = tree.clauses[0]
+    lit = cl.literals[0]
+    op = lit.op
+    print(op, type(op).__name__)
 
 
 if __name__ == "__main__":
+    testme("x=y.")
     # testme("x*y=w | x*y = z | x!=y | y!=z | w!=z.")
-    testme("x*e=x. e*x=x. x*(y*z)=(x*y)*z. x*x'=e. x'*x=e.")
+    # testme("x*e=x. e*x=x. x*(y*z)=(x*y)*z. x*x'=e. x'*x=e.")
     # testme("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.")
