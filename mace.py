@@ -70,7 +70,7 @@ def testme(inp):
     cnf += minimal(ids, s, args.permutations, args.concentric, perms=p)
     t.stop()
 
-    solver = Solver(name="cd", bootstrap_with=cnf)
+    solver = Solver(name="cd15", bootstrap_with=cnf)
     counter = 0
     while True:
         counter += 1

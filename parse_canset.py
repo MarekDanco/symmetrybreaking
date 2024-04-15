@@ -157,7 +157,7 @@ def alg1(ids, phi, s, main=False):
     cnf += phi
     cnf += perm(ids, s)
     cnf += greater(ids, s, sub_grtr, sub_eql_grtr)
-    solver = Solver(name="cd", bootstrap_with=cnf)
+    solver = Solver(name="cd15", bootstrap_with=cnf)
 
     perms = []
     cells = [(x, y) for x in range(s) for y in range(s)]
@@ -294,7 +294,7 @@ def alg2(ids, phi, s, p):
         cnf += minimality(ids, cells, pi, s, assumptions=True)
         cnf += greater2(ids, s, pi, assumptions=True)
 
-    solver = Solver(name="cd", bootstrap_with=cnf)
+    solver = Solver(name="cd15", bootstrap_with=cnf)
     p_reduce = list(p)
     for pi in p:
         p_reduce.pop(p_reduce.index(pi))
