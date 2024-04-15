@@ -36,7 +36,7 @@ class Grounding:
     def ground_cl(self, cl):
         """Ground a clause with elements of domain of size s."""
         clauses = []
-        vars = set(sorted(collect(cl, Var)))
+        vars = tuple(sorted(collect(cl, Var)))
         rep = len(vars)
         vars_names = tuple(sorted([v.name for v in vars]))
         names = {vars_names[i]: i for i in range(rep)}

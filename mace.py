@@ -39,7 +39,7 @@ def testme(inp):
     tree = p.parse(inp)
     t.stop()
     inverses = find_inv(tree)
-    constants = set(sorted(collect(tree, Const)))
+    constants = tuple(sorted(collect(tree, Const)))
 
     t.start(text="flattening")
     flattened = transform(tree)
@@ -79,7 +79,7 @@ def testme(inp):
         time = t.stop(out=False)
         if sat:
             model = solver.get_model()
-            cl = out(model, s, counter, time)
+            cl = out(model, s, counter, time, ids, constants)
             solver.add_clause(cl)  # find a new model
         else:
             break
@@ -93,5 +93,5 @@ def testme(inp):
     print(f"total time: {mins:.0f} {word} {secs:.4f} seconds")
 
 
-# testme("e*x = x. x*e = x. x*x'=e. x'*x=e. x*(y*z)=(x*y)*z.")
-testme("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.")
+testme("e*x = x. x*e = x. x*x'=e. x'*x=e. x*(y*z)=(x*y)*z. c*d!=d*c.")
+# testme("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.")

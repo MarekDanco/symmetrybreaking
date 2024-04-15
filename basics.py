@@ -36,6 +36,7 @@ class Timer:
 
 
 def decode(var, s):
+    """Get parameters of a propositional variable for "*". Inverse function of var_enc."""
     var -= 1
     x = var // s**2
     var %= s**2
@@ -82,7 +83,7 @@ def print_cnf(ids, cnf, s):
     print("]")
 
 
-def out(model, s, counter, time):
+def out(model, s, counter, time, ids=None, constants=None):
     """Print the function table and return a clause blocking the current model."""
     cl = []
     rng = range(s)
@@ -95,6 +96,12 @@ def out(model, s, counter, time):
                 print(d, end=" ", flush=True)
         if y == s - 1:
             print()
+    if ids:
+        for c in constants:
+            for d in rng:
+                if model[var(ids, True, "_", c.name, d) - 1] > 0:
+                    print(f"{c.name}={d}", end=" ")
+        print()
     return cl
 
 
@@ -108,7 +115,7 @@ def var(ids, sign, op, args, d):
     """Return propositional variable for equality of terms."""
     if op == "*":
         # rv = ids.id(("*", args[0], args[1], d))
-        assert False
+        assert False, 'Use var_enc to encode variables for "*".'
     if op == "_":  # constants
         rv = ids.id(("_", args, d))
     if op == "'":

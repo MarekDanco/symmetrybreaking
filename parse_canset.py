@@ -172,7 +172,7 @@ def alg1(ids, phi, s, main=False):
             model = solver.get_model()
             if main:
                 out(model, s, counter, time)
-                print()
+
         else:
             break
         prm = tuple(
@@ -180,9 +180,9 @@ def alg1(ids, phi, s, main=False):
             for i, d in product(range(s), repeat=2)
             if model[canset_var(ids, True, "pi", i, d) - 1] > 0
         )
-        assert len(prm) == s
+        assert len(prm) == s, "Found permutation has wrong length."
         if main:
-            print(prm, "\n=====")
+            print(f"permutation: {prm}")
         solver.append_formula(minimality(ids, cells, prm, s))
         perms += [prm]
     solver.delete()
@@ -321,30 +321,31 @@ def testme(inp):
     p = Parser()
     tree = p.parse(inp)
     inverses = find_inv(tree)
-    constants = set(sorted(collect(tree, Const)))
+    constants = tuple(sorted(collect(tree, Const)))
     flattened = transform(tree)
 
     s = args.s
     ids = IDPool(occupied=[[1, s**3]])
     phi = []
-    print(tostr(flattened), flush=True)
+    # print(tostr(flattened), flush=True)
 
     t = Timer()
     t.start(text="grounding")
     g = Grounding(s, ids)
     phi += g.ground(flattened)
-    # return print_cnf(ids, phi, s)
     phi += g.one_hot(constants, inverses)
     t.stop()
 
     p = alg1(ids, phi, s, main=True)
+    print("Canonical set: ", flush=True)
     print(p)
 
+    print("Reduced canonical set: ", flush=True)
     p2 = alg2(ids, phi, s, p)
     print(p2)
 
 
 if __name__ == "__main__":
     # testme("x*y=z*w.")
-    # testme("e*x = x. x*e = x. x*x'=e. x'*x=e. x*(y*z)=(x*y)*z.")
-    testme("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.")
+    testme("e*x = x. x*e = x. x*x'=e. x'*x=e. x*(y*z)=(x*y)*z.")
+    # testme("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.")
