@@ -4,7 +4,7 @@ import argparse
 from pysat.solvers import Solver
 from pysat.formula import IDPool
 from basics import pick_one, print_cnf, debug_model, Timer, out, var_enc
-from minmod import minimality, inv, assump
+from minmod import minimality, inv, assump, equal_values
 from itertools import product
 from grounding import Grounding
 from parsing import (
@@ -40,12 +40,14 @@ def perm(ids, s):
 
 
 def rhs(ids, *args):
+    """Variable for the conjuncts in "cell>pi(inv(cell))" and
+    "cell=pi(inv(cell))" formulas."""
     return ids.id(("rhs", args))
 
 
 def sub_rhs(ids, s):
-    """Substitute the conjuncts on the right-hand side of cell>pi(inv(cell)) and
-    cell=pi(inv(cell)) formulas with variables."""
+    """Substitute the conjuncts on the right-hand side of "cell>pi(inv(cell))" and
+    "cell=pi(inv(cell))" formulas with variables."""
     clauses = []
     for x, i, j, y, k, l in product(range(s), repeat=6):
         clauses += [
@@ -82,6 +84,8 @@ def eql_grtr(ids, cell):
 
 
 def sub_grtr(ids, cell, s):
+    """Substitute "cell is greater than pi(inv(cell))" in A>pi(A) constraints with a variable.
+    Here pi is a variable."""
     rng = range(s)
     clauses = []
     grt = -grtr(ids, cell)
@@ -98,6 +102,8 @@ def sub_grtr(ids, cell, s):
 
 
 def sub_eql_grtr(ids, cell, s):
+    """Substitute "cell is equal to pi(inv(cell))" in A>pi(A) constraints with a variable.
+    Here pi is a variable."""
     rng = range(s)
     clauses = []
     eq = -eql_grtr(ids, cell)
@@ -109,16 +115,15 @@ def sub_eql_grtr(ids, cell, s):
     return clauses
 
 
-def greater(ids, s, sub_g, sub_e):
+def greater(ids, s, cells):
     """Constraints for A>pi(A) where pi is a variable."""
     clauses = []
     clauses += sub_rhs(ids, s)
     rng = range(s)
-    cells = [[x, y] for x in rng for y in rng]
 
     for cell in cells:
-        clauses += sub_g(ids, cell, s)
-        clauses += sub_e(ids, cell, s)
+        clauses += sub_grtr(ids, cell, s)
+        clauses += sub_eql_grtr(ids, cell, s)
 
     clauses += [
         [-eql_grtr(ids, cell) for cell in cells]
@@ -150,17 +155,18 @@ def greater(ids, s, sub_g, sub_e):
     return clauses
 
 
-def alg1(ids, phi, s, main=False):
+def alg1(ids, phi, s, main=False, constants=None, cells: list = None):
     """Compute canonical set of permutations for given problem phi."""
     cnf = []
 
     cnf += phi
     cnf += perm(ids, s)
-    cnf += greater(ids, s, sub_grtr, sub_eql_grtr)
+    if not cells:
+        cells = [(x, y) for x in range(s) for y in range(s)]
+    cnf += greater(ids, s, cells)
     solver = Solver(name="cd15", bootstrap_with=cnf)
 
     perms = []
-    cells = [(x, y) for x in range(s) for y in range(s)]
     counter = 0
     t = Timer()
     while True:
@@ -171,8 +177,7 @@ def alg1(ids, phi, s, main=False):
         if sat:
             model = solver.get_model()
             if main:
-                out(model, s, counter, time)
-
+                out(model, s, counter, time, ids, constants)
         else:
             break
         prm = tuple(
@@ -206,33 +211,50 @@ def eql_grtr2(ids, pi, cell):
     return ids.id(("eqlg", pi, tuple(cell)))
 
 
+def greater_values(pi):
+    """Set of values x>pi(x)."""
+    return {i for i, val in enumerate(pi) if i > val}
+
+
 def sub_grtr2(ids, pi, cell, s):
+    """Substitute "cell is greater than pi(inv(cell))" in A>pi(A) constraints with a variable."""
     clauses = []
     grt = -grtr2(ids, pi, cell)
     inverse = inv(pi)
-    clauses += [
-        [grt, var_enc(s, False, cell[0], cell[1], d)]
-        + [
-            var_enc(s, True, inverse[cell[0]], inverse[cell[1]], d2)
-            for d2 in smaller_set(pi, d, s)
+    if (pi[cell[0]] == cell[0]) and (pi[cell[1]] == cell[1]):
+        clauses += [
+            [grt] + [var_enc(s, True, cell[0], cell[1], d) for d in greater_values(pi)]
         ]
-        for d in range(s)
-    ]
+    else:
+        clauses += [
+            [grt, var_enc(s, False, cell[0], cell[1], d)]
+            + [
+                var_enc(s, True, inverse[cell[0]], inverse[cell[1]], d2)
+                for d2 in smaller_set(pi, d, s)
+            ]
+            for d in range(s)
+        ]
     return clauses
 
 
 def sub_eql_grtr2(ids, pi, cell, s):
+    """Substitute "cell is equal to pi(inv(cell))" in A>pi(A) constraints with a variable."""
     clauses = []
     e = -eql_grtr2(ids, pi, cell)
     inverse = inv(pi)
-    clauses += [
-        [
-            e,
-            var_enc(s, False, cell[0], cell[1], d),
-            var_enc(s, True, inverse[cell[0]], inverse[cell[1]], inverse[d]),
+    if (pi[cell[0]] == cell[0]) and (pi[cell[1]] == cell[1]):
+        clauses += [
+            [e] + [var_enc(s, True, cell[0], cell[1], d) for d in equal_values(pi)]
         ]
-        for d in range(s)
-    ]
+    else:
+        clauses += [
+            [
+                e,
+                var_enc(s, False, cell[0], cell[1], d),
+                var_enc(s, True, inverse[cell[0]], inverse[cell[1]], inverse[d]),
+            ]
+            for d in range(s)
+        ]
     return clauses
 
 
@@ -241,14 +263,12 @@ def assump2(ids, pi):
     return ids.id(("assump2", pi))
 
 
-def greater2(ids, s, pi, assumptions=False):
+def greater2(ids, cells, pi, s, assumptions=False):
     """Constraints for A>pi(A)."""
     clauses = []
     asmp = []
     if assumptions:
         asmp.append(assump2(ids, pi))
-    rng = range(s)
-    cells = [[x, y] for x in rng for y in rng]
 
     clauses += [
         [-eql_grtr2(ids, pi, cell) for cell in cells]
@@ -285,14 +305,15 @@ def greater2(ids, s, pi, assumptions=False):
     return clauses
 
 
-def alg2(ids, phi, s, p):
+def alg2(ids, phi, s, p, cells: list = None):
     """Reduce canonical set p."""
     cnf = []
     cnf += phi
-    cells = [(x, y) for x in range(s) for y in range(s)]
+    if not cells:
+        cells = [(x, y) for x in range(s) for y in range(s)]
     for pi in p:
         cnf += minimality(ids, cells, pi, s, assumptions=True)
-        cnf += greater2(ids, s, pi, assumptions=True)
+        cnf += greater2(ids, cells, pi, s, assumptions=True)
 
     solver = Solver(name="cd15", bootstrap_with=cnf)
     p_reduce = list(p)
@@ -336,16 +357,22 @@ def testme(inp):
     phi += g.one_hot(constants, inverses)
     t.stop()
 
-    p = alg1(ids, phi, s, main=True)
+    cells = [(x, y) for x in range(s) for y in range(s)]
+    # cells.sort(key=lambda e: max(e[0], e[1]))
+
+    p = alg1(ids, phi, s, main=True, constants=constants, cells=cells)
     print("Canonical set: ", flush=True)
     print(p)
 
     print("Reduced canonical set: ", flush=True)
-    p2 = alg2(ids, phi, s, p)
+    p2 = alg2(ids, phi, s, p, cells=cells)
     print(p2)
 
 
+# TODO cells a solver ako parameter
+
 if __name__ == "__main__":
     # testme("x*y=z*w.")
-    testme("e*x = x. x*e = x. x*x'=e. x'*x=e. x*(y*z)=(x*y)*z.")
+    # testme("e*x = x. x*e = x. x*x'=e. x'*x=e. x*(y*z)=(x*y)*z. c*d!=d*c.")
     # testme("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.")
+    testme("x*(y*z)=(x*y)*z.")
