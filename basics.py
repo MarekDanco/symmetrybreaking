@@ -94,13 +94,15 @@ def out(model, s, counter, time, ids=None, constants=None):
             if model[enc - 1] > 0:
                 cl.append(-enc)
                 print(d, end=" ", flush=True)
+                break
         if y == s - 1:
             print()
-    if ids:
+    if constants:
         for c in constants:
             for d in rng:
                 if model[var(ids, True, "_", c.name, d) - 1] > 0:
                     print(f"{c.name}={d}", end=" ")
+                    break
         print()
     return cl
 
