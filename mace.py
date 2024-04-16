@@ -33,8 +33,8 @@ def testme(inp):
     )
     args = arg_parser.parse_args()
 
-    p = Parser()
     t = Timer()
+    p = Parser()
     t.start(text="parsing")
     tree = p.parse(inp)
     t.stop()
@@ -58,16 +58,20 @@ def testme(inp):
     cnf += g.one_hot(constants, inverses)
     t.stop()
 
+    cells = [(x, y) for x in range(s) for y in range(s)]
+    if args.concentric:
+        cells.sort(key=lambda e: max(e[0], e[1]))
+
     t.start(text="canonical set")
-    p = alg1(ids, cnf, s)
+    p = alg1(ids, cnf, s, constants=constants, cells=cells)
     t.stop()
 
     t.start(text="reduced canonical set")
-    p = alg2(ids, cnf, s, p)
+    p = alg2(ids, cnf, s, p, cells=cells)
     t.stop()
 
     t.start(text="minimality")
-    cnf += minimal(ids, s, args.permutations, args.concentric, perms=p)
+    cnf += minimal(ids, s, args.permutations, perms=p, cells=cells)
     t.stop()
 
     solver = Solver(name="cd15", bootstrap_with=cnf)
@@ -93,5 +97,6 @@ def testme(inp):
     print(f"total time: {mins:.0f} {word} {secs:.4f} seconds")
 
 
-testme("e*x = x. x*e = x. x*x'=e. x'*x=e. x*(y*z)=(x*y)*z. c*d!=d*c.")
+# testme("e*x = x. x*e = x. x*x'=e. x'*x=e. x*(y*z)=(x*y)*z.")
 # testme("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.")
+testme("x*(y*z)=(x*y)*z.")

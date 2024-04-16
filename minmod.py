@@ -155,16 +155,13 @@ def minimality(ids, cells, pi: tuple, s, assumptions=False):
     return clauses
 
 
-def minimal(ids, s, all_perms, concentric, perms: list = None):
+def minimal(ids, s, all_perms: bool, perms: list = None, cells: list = None):
     """Compute CNF for minimal model."""
     clauses = []
     rng = range(s)
 
-    cells = [(x, y) for x in rng for y in rng]
-    if concentric:
-        cells.sort(key=lambda e: max(e[0], e[1]))
-        if not all_perms and perms is None:
-            clauses += lnh(ids, s, cells)
+    if not cells:
+        cells = [(x, y) for x in rng for y in rng]
 
     if perms is None:
         perms = permutations(rng) if all_perms else transps(s)
