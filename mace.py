@@ -1,6 +1,6 @@
 """Find models for an algebra using MACE."""
 
-import argparse
+from argparser import arg_parser
 from pysat.solvers import Solver
 from pysat.formula import IDPool
 from parsing import Parser, transform, Const, collect, find_inv
@@ -13,41 +13,8 @@ from parse_canset import alg1, alg2
 def testme(inp):
     total = Timer()
     total.start(out=False)
-    arg_parser = argparse.ArgumentParser()
-    arg_parser.add_argument(
-        "-p",
-        "--permutations",
-        help="encode minimality under all permutations",
-        default=False,
-        action="store_true",
-    )
-    arg_parser.add_argument(
-        "-t",
-        "--transpositions",
-        help="encode minimality under transpositions only",
-        default=False,
-        action="store_true",
-    )
-    arg_parser.add_argument(
-        "-c",
-        "--concentric",
-        help="encode minimality with respect to concentric ordering",
-        default=False,
-        action="store_true",
-    )
-    arg_parser.add_argument(
-        "domain",
-        type=int,
-        help="domain size",
-    )
-    arg_parser.add_argument(
-        "solver",
-        help="name of  the SAT solver, set to Cadical153 by default",
-        default="cd15",
-        nargs="?",
-        type=str,
-    )
-    args = arg_parser.parse_args()
+
+    args = arg_parser().parse_args()
 
     t = Timer()
     p = Parser()
