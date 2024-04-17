@@ -305,7 +305,6 @@ def testme(inp):
 
     print("input:")
     print(tostr(tree))
-    print(sorted(collect(tree, Var)))
     print(tostr(transform(tree)))
 
 
