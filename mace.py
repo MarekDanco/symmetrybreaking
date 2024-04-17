@@ -18,18 +18,34 @@ def testme(inp):
         "-p",
         "--permutations",
         help="encode minimality under all permutations",
+        default=False,
+        action="store_true",
+    )
+    arg_parser.add_argument(
+        "-t",
+        "--transpositions",
+        help="encode minimality under transpositions only",
+        default=False,
         action="store_true",
     )
     arg_parser.add_argument(
         "-c",
         "--concentric",
         help="encode minimality with respect to concentric ordering",
+        default=False,
         action="store_true",
     )
     arg_parser.add_argument(
-        "s",
+        "domain",
         type=int,
         help="domain size",
+    )
+    arg_parser.add_argument(
+        "solver",
+        help="name of  the SAT solver, set to Cadical153 by default",
+        default="cd15",
+        nargs="?",
+        type=str,
     )
     args = arg_parser.parse_args()
 
@@ -45,7 +61,7 @@ def testme(inp):
     flattened = transform(tree)
     t.stop()
 
-    s = args.s
+    s = args.domain
     ids = IDPool(occupied=[[1, s**3]])
     cnf = []
 
@@ -63,18 +79,18 @@ def testme(inp):
         cells.sort(key=lambda e: max(e[0], e[1]))
 
     t.start(text="canonical set")
-    p = alg1(ids, cnf, s, constants=constants, cells=cells)
+    p = alg1(ids, cnf, s, args.solver, cells=cells, constants=constants)
     t.stop()
 
     t.start(text="reduced canonical set")
-    p = alg2(ids, cnf, s, p, cells=cells)
+    p = alg2(ids, cnf, s, p, args.solver, cells=cells)
     t.stop()
 
     t.start(text="minimality")
     cnf += minimal(ids, s, args.permutations, perms=p, cells=cells)
     t.stop()
 
-    solver = Solver(name="cd15", bootstrap_with=cnf)
+    solver = Solver(name=args.solver, bootstrap_with=cnf)
     counter = 0
     while True:
         counter += 1
@@ -97,6 +113,6 @@ def testme(inp):
     print(f"total time: {mins:.0f} {word} {secs:.4f} seconds")
 
 
-# testme("e*x = x. x*e = x. x*x'=e. x'*x=e. x*(y*z)=(x*y)*z.")
+testme("e*x = x. x*e = x. x*x'=e. x'*x=e. x*(y*z)=(x*y)*z.")
 # testme("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.")
-testme("x*(y*z)=(x*y)*z.")
+# testme("x*(y*z)=(x*y)*z.")
