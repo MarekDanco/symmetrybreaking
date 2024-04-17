@@ -155,7 +155,7 @@ def greater(ids, s, cells):
     return clauses
 
 
-def alg1(ids, phi, s, main=False, constants=None, cells: list = None):
+def alg1(ids, phi, s, solver_name, main=False, constants=None, cells: list = None):
     """Compute canonical set of permutations for given problem phi."""
     cnf = []
 
@@ -164,7 +164,7 @@ def alg1(ids, phi, s, main=False, constants=None, cells: list = None):
     if not cells:
         cells = [(x, y) for x in range(s) for y in range(s)]
     cnf += greater(ids, s, cells)
-    solver = Solver(name="cd15", bootstrap_with=cnf)
+    solver = Solver(name=solver_name, bootstrap_with=cnf)
 
     perms = []
     counter = 0
@@ -305,7 +305,7 @@ def greater2(ids, cells, pi, s, assumptions=False):
     return clauses
 
 
-def alg2(ids, phi, s, p, cells: list = None):
+def alg2(ids, phi, s, p, solver_name, cells: list = None):
     """Reduce canonical set p."""
     cnf = []
     cnf += phi
@@ -315,7 +315,7 @@ def alg2(ids, phi, s, p, cells: list = None):
         cnf += minimality(ids, cells, pi, s, assumptions=True)
         cnf += greater2(ids, cells, pi, s, assumptions=True)
 
-    solver = Solver(name="cd15", bootstrap_with=cnf)
+    solver = Solver(name=solver_name, bootstrap_with=cnf)
     p_reduce = list(p)
     for pi in p:
         p_reduce.pop(p_reduce.index(pi))
@@ -334,10 +334,11 @@ def alg2(ids, phi, s, p, cells: list = None):
 def testme(inp):
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument(
-        "s",
+        "domain",
         type=int,
         help="domain size",
     )
+    arg_parser.add_argument("solver", default="cd15", nargs="?", type=str)
     args = arg_parser.parse_args()
     p = Parser()
     tree = p.parse(inp)
@@ -345,7 +346,7 @@ def testme(inp):
     constants = tuple(sorted(collect(tree, Const)))
     flattened = transform(tree)
 
-    s = args.s
+    s = args.domain
     ids = IDPool(occupied=[[1, s**3]])
     phi = []
     # print(tostr(flattened), flush=True)
@@ -360,16 +361,16 @@ def testme(inp):
     cells = [(x, y) for x in range(s) for y in range(s)]
     # cells.sort(key=lambda e: max(e[0], e[1]))
 
-    p = alg1(ids, phi, s, main=True, constants=constants, cells=cells)
+    p = alg1(ids, phi, s, args.solver, main=True, constants=constants, cells=cells)
     print("Canonical set: ", flush=True)
     print(p)
 
     print("Reduced canonical set: ", flush=True)
-    p2 = alg2(ids, phi, s, p, cells=cells)
+    p2 = alg2(ids, phi, s, p, args.solver, cells=cells)
     print(p2)
 
 
-# TODO cells a solver ako parameter
+# TODO concentric, domain, solver ukladat v args a tie posielat ako parameter
 
 if __name__ == "__main__":
     # testme("x*y=z*w.")
