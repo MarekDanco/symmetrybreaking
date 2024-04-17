@@ -306,14 +306,10 @@ def testme(inp):
     print("input:")
     print(tostr(tree))
     print(sorted(collect(tree, Var)))
-    cl = tree.clauses[0]
-    lit = cl.literals[0]
-    op = lit.op
-    print(op, type(op).__name__)
+    print(tostr(transform(tree)))
 
 
 if __name__ == "__main__":
-    testme("x=y.")
     # testme("x*y=w | x*y = z | x!=y | y!=z | w!=z.")
     # testme("x*e=x. e*x=x. x*(y*z)=(x*y)*z. x*x'=e. x'*x=e.")
-    # testme("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.")
+    testme("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.")

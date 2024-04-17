@@ -371,9 +371,10 @@ def testme(inp):
 
 
 # TODO concentric, domain, solver ukladat v args a tie posielat ako parameter
+# TODO module sa spracovanie argumentov
 
 if __name__ == "__main__":
     # testme("x*y=z*w.")
     # testme("e*x = x. x*e = x. x*x'=e. x'*x=e. x*(y*z)=(x*y)*z. c*d!=d*c.")
-    # testme("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.")
-    testme("x*(y*z)=(x*y)*z.")
+    testme("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.")
+    # testme("x*(y*z)=(x*y)*z.")
