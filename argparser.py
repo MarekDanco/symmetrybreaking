@@ -4,6 +4,7 @@ import argparse
 
 
 def arg_parser():
+    """Returns ArgumrntParser object equipped with defined arguments."""
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument(
         "-p",
