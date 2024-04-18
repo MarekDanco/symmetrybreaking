@@ -83,7 +83,7 @@ def print_cnf(ids, cnf, s):
     print("]")
 
 
-def out(model, s, counter, time, ids=None, constants=None):
+def out(model, s, counter, time, ids=None, constants=None, inverses=False):
     """Print the function table and return a clause blocking the current model."""
     cl = []
     rng = range(s)
@@ -104,6 +104,15 @@ def out(model, s, counter, time, ids=None, constants=None):
                 if model[enc - 1] > 0:
                     cl.append(-enc)
                     print(f"{c.name}={d}", end=" ")
+                    break
+        print()
+    if inverses:
+        for x in rng:
+            for d in rng:
+                enc = var(ids, True, "'", x, d)
+                if model[enc - 1] > 0:
+                    cl.append(-enc)
+                    print(f"{x}'={d}", end=" ")
                     break
         print()
     return cl

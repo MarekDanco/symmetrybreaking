@@ -67,7 +67,9 @@ def testme(inp):
         time = t.stop(out=False)
         if sat:
             model = solver.get_model()
-            cl = out(model, s, counter, time, ids, constants)
+            cl = out(
+                model, s, counter, time, ids, constants=constants, inverses=inverses
+            )
             solver.add_clause(cl)  # find a new model
         else:
             break

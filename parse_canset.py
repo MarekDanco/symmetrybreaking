@@ -155,7 +155,7 @@ def greater(ids, s, cells):
     return clauses
 
 
-def alg1(ids, phi, s, args, main=False, constants=None):
+def alg1(ids, phi, s, args, main=False, constants=None, inverses=False):
     """Compute canonical set of permutations for given problem phi."""
     cnf = []
 
@@ -178,7 +178,9 @@ def alg1(ids, phi, s, args, main=False, constants=None):
         if sat:
             model = solver.get_model()
             if main:
-                out(model, s, counter, time, ids, constants)
+                out(
+                    model, s, counter, time, ids, constants=constants, inverses=inverses
+                )
         else:
             break
         prm = tuple(
@@ -355,7 +357,7 @@ def testme(inp):
     phi += g.one_hot(constants, inverses)
     t.stop()
 
-    p = alg1(ids, phi, s, args, main=True, constants=constants)
+    p = alg1(ids, phi, s, args, main=True, constants=constants, inverses=inverses)
     print("Canonical set: ", flush=True)
     print(p)
 
@@ -375,5 +377,5 @@ def testme(inp):
 if __name__ == "__main__":
     # testme("x*y=z*w.")
     # testme("e*x = x. x*e = x. x*x'=e. x'*x=e. x*(y*z)=(x*y)*z. c*d!=d*c.")
-    testme("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.")
-    # testme("x*(y*z)=(x*y)*z.")
+    # testme("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.")
+    testme("e*x = x. x*e = x. x*x'=e. x'*x=e. x*(y*z)=(x*y)*z.")
