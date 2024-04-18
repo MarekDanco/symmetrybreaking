@@ -21,17 +21,17 @@ class Grounding:
         func = lit.args[1]  # second is always Term
         if func.tag == 2:
             op = "_"
-            args = func.name
+            arg = func.name
         if func.tag == 0:
             op = func.op
             if len(func.args) == 1:
-                args = tup[names[func.args[0].name]]
+                arg = tup[names[func.args[0].name]]
             if len(func.args) == 2:
                 x = tup[names[func.args[0].name]]
                 y = tup[names[func.args[1].name]]
                 # args = self.pairs[self.s * x + y]
                 return var_enc(self.s, sign, x, y, d)
-        return sign, op, args, d
+        return sign, op, arg, d
 
     def ground_cl(self, cl):
         """Ground a clause with elements of domain of size s."""
@@ -56,8 +56,8 @@ class Grounding:
                 if add_lit:  # dont append if x!=y
                     prms = self.get_prms(tup, lit, names)
                     if isinstance(prms, tuple):
-                        sign, op, args, d = prms
-                        gr.append(var(self.ids, sign, op, args, d))
+                        sign, op, arg, d = prms
+                        gr.append(var(self.ids, sign, op, arg, d))
                     else:
                         gr.append(prms)
             if add_gr:  # dont add grounding if x=y
@@ -71,7 +71,7 @@ class Grounding:
             clauses += self.ground_cl(clause)
         return clauses
 
-    def one_hot(self, constants, inverses):
+    def one_hot(self, constants, inverses: bool):
         """Ensure 1-hot of all functions."""
         clauses = []
         rng = range(self.s)
