@@ -155,16 +155,17 @@ def greater(ids, s, cells):
     return clauses
 
 
-def alg1(ids, phi, s, solver_name, main=False, constants=None, cells: list = None):
+def alg1(ids, phi, s, args, main=False, constants=None):
     """Compute canonical set of permutations for given problem phi."""
     cnf = []
 
     cnf += phi
     cnf += perm(ids, s)
-    if not cells:
-        cells = [(x, y) for x in range(s) for y in range(s)]
+    cells = [(x, y) for x in range(s) for y in range(s)]
+    if args.concentric:
+        cells.sort(key=lambda e: max(e[0], e[1]))
     cnf += greater(ids, s, cells)
-    solver = Solver(name=solver_name, bootstrap_with=cnf)
+    solver = Solver(name=args.solver, bootstrap_with=cnf)
 
     perms = []
     counter = 0
@@ -305,17 +306,19 @@ def greater2(ids, cells, pi, s, assumptions=False):
     return clauses
 
 
-def alg2(ids, phi, s, p, solver_name, cells: list = None):
+def alg2(ids, phi, s, p, args):
     """Reduce canonical set p."""
     cnf = []
     cnf += phi
-    if not cells:
-        cells = [(x, y) for x in range(s) for y in range(s)]
+    cells = [(x, y) for x in range(s) for y in range(s)]
+    if args.concentric:
+        cells.sort(key=lambda e: max(e[0], e[1]))
+
     for pi in p:
         cnf += minimality(ids, cells, pi, s, assumptions=True)
         cnf += greater2(ids, cells, pi, s, assumptions=True)
 
-    solver = Solver(name=solver_name, bootstrap_with=cnf)
+    solver = Solver(name=args.solver, bootstrap_with=cnf)
     p_reduce = list(p)
     for pi in p:
         p_reduce.pop(p_reduce.index(pi))
@@ -332,7 +335,8 @@ def alg2(ids, phi, s, p, solver_name, cells: list = None):
 
 
 def testme(inp):
-
+    total = Timer()
+    total.start(out=False)
     args = arg_parser().parse_args()
     p = Parser()
     tree = p.parse(inp)
@@ -343,7 +347,6 @@ def testme(inp):
     s = args.domain
     ids = IDPool(occupied=[[1, s**3]])
     phi = []
-    # print(tostr(flattened), flush=True)
 
     t = Timer()
     t.start(text="grounding")
@@ -352,20 +355,22 @@ def testme(inp):
     phi += g.one_hot(constants, inverses)
     t.stop()
 
-    cells = [(x, y) for x in range(s) for y in range(s)]
-    # cells.sort(key=lambda e: max(e[0], e[1]))
-
-    p = alg1(ids, phi, s, args.solver, main=True, constants=constants, cells=cells)
+    p = alg1(ids, phi, s, args, main=True, constants=constants)
     print("Canonical set: ", flush=True)
     print(p)
 
     print("Reduced canonical set: ", flush=True)
-    p2 = alg2(ids, phi, s, p, args.solver, cells=cells)
+    p2 = alg2(ids, phi, s, p, args)
     print(p2)
 
+    secs = total.stop(out=False)
+    if secs < 60:
+        return print(f"total time: {secs:.4f} seconds")
+    mins = secs // 60
+    secs %= 60
+    word = "minute" if mins == 1 else "minutes"
+    print(f"total time: {mins:.0f} {word} {secs:.4f} seconds")
 
-# TODO concentric, domain, solver ukladat v args a tie posielat ako parameter
-# TODO module na spracovanie argumentov
 
 if __name__ == "__main__":
     # testme("x*y=z*w.")
