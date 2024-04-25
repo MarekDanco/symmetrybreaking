@@ -98,21 +98,6 @@ def transps(s):
     return tps
 
 
-def lnh(ids, s, cells):
-    """Least number heuristic for binary functions with concentrically sorted cells only."""
-    clauses = []
-    for i, cell in enumerate(cells):
-        layer = max(cell[0], cell[1])
-        if layer + 2 == s:  # whole domain allowed
-            break
-        for d in range(layer + 2, s):
-            clauses += [
-                [var_enc(s, False, cell[0], cell[1], d)]
-                + [var_enc(s, True, cells[j][0], cells[j][1], d - 1) for j in range(i)]
-            ]
-    return clauses
-
-
 def assump(ids, pi):
     """Assumptions for A<=pi(A) constraints."""
     return ids.id(("assump", pi))
@@ -172,6 +157,39 @@ def minimal(ids, s, args, perms: list = None):
         if pi == tuple([i for i in rng]):
             continue
         clauses += minimality(ids, cells, pi, s)
+    return clauses
+
+
+def lnh(ids, s, args, constants=None, inverses=None):
+    """Least number heuristic for binary functions."""
+    clauses = []
+    rng = range(s)
+
+    cells = [(x, y) for x in rng for y in rng]
+    if args.concentric:
+        cells.sort(key=lambda e: max(e[0], e[1]))
+
+    # TODO inverses ?
+
+    for i, cnst in enumerate(constants):
+        if i + 1 == s:  # whole domain allowed
+            break
+        for d in range(i + 1, s):
+            clauses += [
+                [var(ids, False, "_", cnst.name, d)]
+                + [var(ids, True, "_", constants[j].name, d - 1) for j in range(i)]
+            ]
+
+    for i, cell in enumerate(cells):
+        layer = max(cell[0], cell[1])
+        if layer + 2 == s:  # whole domain allowed
+            break
+        for d in range(layer + 2, s):
+            clauses += [
+                [var_enc(s, False, cell[0], cell[1], d)]
+                + [var_enc(s, True, cells[j][0], cells[j][1], d - 1) for j in range(i)]
+                + [var(ids, True, "_", cnst.name, d - 1) for cnst in constants]
+            ]
     return clauses
 
 

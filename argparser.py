@@ -28,6 +28,12 @@ def arg_parser():
         action="store_true",
     )
     arg_parser.add_argument(
+        "-lnh",
+        help="break symmetries using the Least Number Heuristic",
+        default=False,
+        action="store_true",
+    )
+    arg_parser.add_argument(
         "domain",
         type=int,
         help="domain size",

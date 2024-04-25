@@ -5,7 +5,7 @@ from pysat.solvers import Solver
 from pysat.formula import IDPool
 from parsing import Parser, transform, Const, collect, find_inv
 from grounding import Grounding
-from minmod import minimal
+from minmod import minimal, lnh
 from basics import out, Timer
 from parse_canset import alg1, alg2
 
@@ -41,7 +41,9 @@ def testme(inp):
     t.stop()
 
     p = None
-    if args.transpositions:
+    if args.lnh:
+        print("breaking symmetries using the Least Number Heuristic")
+    elif args.transpositions:
         print("encoding minimality under transpositions only")
     elif args.permutations:
         print("encoding minimality under all permutations")
@@ -54,9 +56,12 @@ def testme(inp):
         p = alg2(ids, cnf, s, p, args)
         t.stop()
 
-    t.start(text="minimality")
-    cnf += minimal(ids, s, args, perms=p)
-    t.stop()
+    if args.lnh:
+        cnf += lnh(ids, s, args, constants=constants, inverses=inverses)
+    else:
+        t.start(text="minimality")
+        cnf += minimal(ids, s, args, perms=p)
+        t.stop()
 
     solver = Solver(name=args.solver, bootstrap_with=cnf)
     counter = 0
@@ -83,7 +88,7 @@ def testme(inp):
     print(f"total time: {mins:.0f} {word} {secs:.4f} seconds")
 
 
-testme("e*x = x. x*e = x. x*x'=e. x'*x=e. x*(y*z)=(x*y)*z.")
+testme("e*x = x. x*e = x. x*x'=e. x'*x=e. x*(y*z)=(x*y)*z. c*d!=d*c.")
 # testme("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.")
-# testme("x' = x * 0. 0'' = 0. (x*y)*z = ((z'*x)*(y*z)')'.")
 # testme("x*(y*z)=(x*y)*z.")
+# testme("x*x=x. (x*y)*x=y.")  # Constructing Finite Algebras with FALCON
