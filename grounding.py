@@ -10,8 +10,6 @@ class Grounding:
 
     def __init__(self, s: int, ids) -> None:
         self.s = s
-        rng = range(s)
-        # self.pairs = {self.s * x + y: (x, y) for x in rng for y in rng}
         self.ids = ids
 
     def get_prms(self, tup, lit, names):
@@ -29,7 +27,6 @@ class Grounding:
             if len(func.args) == 2:
                 x = tup[names[func.args[0].name]]
                 y = tup[names[func.args[1].name]]
-                # args = self.pairs[self.s * x + y]
                 return var_enc(self.s, sign, x, y, d)
         return sign, op, arg, d
 
