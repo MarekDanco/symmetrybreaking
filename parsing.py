@@ -8,6 +8,7 @@ from pyparsing import Suppress, Word, Forward, Optional, ZeroOrMore, Literal
 Apply = namedtuple("Apply", ["op", "args", "tag"])  # function applications, tag = 0
 Var = namedtuple("Var", ["name", "tag"])  # variable nodes, tag = 1
 Const = namedtuple("Const", ["name", "tag"])  # constants, tag = 2
+Predicate = namedtuple("Predicate", ["op", "args", "tag"])  # splitting, tag = 3
 Clause = namedtuple("Clause", ["literals"])
 CNF = namedtuple("CNF", ["clauses"])
 
@@ -103,7 +104,7 @@ def tostr(t):
     """Basic print for ASTs."""
     if isinstance(t, (Var, Const)):
         return t.name
-    if isinstance(t, Apply):
+    if isinstance(t, (Apply, Predicate)):
         return t.op + "(" + " ".join(map(tostr, t.args)) + ")"
     if isinstance(t, Clause):
         return " | ".join(map(tostr, t.literals)) + "."
@@ -305,7 +306,9 @@ def testme(inp):
 
     print("input:")
     print(tostr(tree))
-    print(tostr(transform(tree)))
+    print("flattened:")
+    ftree = transform(tree)
+    print(tostr(ftree))
 
 
 if __name__ == "__main__":

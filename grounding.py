@@ -35,7 +35,7 @@ class Grounding:
         clauses = []
         vars = tuple(sorted(collect(cl, Var)))
         rep = len(vars)
-        vars_names = tuple(sorted([v.name for v in vars]))
+        vars_names = tuple([v.name for v in vars])
         names = {vars_names[i]: i for i in range(rep)}
 
         for tup in product(range(self.s), repeat=rep):
