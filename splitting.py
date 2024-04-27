@@ -12,6 +12,7 @@ from parsing import (
     tostr,
     transform,
 )
+from copy import deepcopy
 
 
 class Splitting:
@@ -20,18 +21,17 @@ class Splitting:
     def splittable(cl):
         """Find variable connected to the least amount of other variables,
         or return that the clause isn't splittable."""
-        vars = tuple(sorted(collect(cl, Var)))
-        vars_names = tuple([v.name for v in vars])
-        connections = {var: set() for var in vars_names}
-        for var in vars_names:
+        vars = sorted([v.name for v in collect(cl, Var)])
+        connections = {var: set() for var in vars}
+        for var in vars:
             for lit in cl.literals:
                 lit_vars = {v.name for v in collect(lit, Var)}
                 if var in lit_vars:
                     connections[var] |= lit_vars
         for pair in connections:
             print(pair, connections[pair])
-        least = vars_names[0]
-        for var in vars_names:
+        least = vars[0]
+        for var in vars:
             if len(connections[var]) < len(connections[least]):
                 least = var
         if len(connections[least]) == len(vars):
@@ -40,7 +40,23 @@ class Splitting:
         print(least)
         return least
 
-    pass
+    def lr_split(cl, var):
+        """Split a clause into a left and right part using given variable."""
+        left = Clause(literals=[])
+        right = Clause(literals=[])
+        for lit in cl.literals:
+            lit_vars = {v.name for v in collect(lit, Var)}
+            if var in lit_vars:
+                left.literals.append(deepcopy(lit))
+            else:
+                right.literals.append(deepcopy(lit))
+
+        left_vars = collect(left, Var)
+        right_vars = collect(right, Var)
+        intrsn = sorted(list(left_vars.intersection(right_vars)))
+        left.literals.append(Predicate(op=f"S<>", args=intrsn, tag=3))
+        right.literals.append(Predicate(op=f"!S<>", args=intrsn, tag=3))
+        return left, right
 
 
 def testme(inp):
@@ -55,12 +71,16 @@ def testme(inp):
     print(tostr(ftree))
 
     for cl in ftree.clauses:
-        Splitting.splittable(cl)
+        v = Splitting.splittable(cl)
+        if v:
+            l, r = Splitting.lr_split(cl, v)
+            print(tostr(l))
+            print(tostr(r))
         print("====")
 
 
 if __name__ == "__main__":
-    # testme("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.")
-    testme("e*x = x. x*e = x. x*x'=e. x'*x=e. x*(y*z)=(x*y)*z.")
+    testme("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.")
+    # testme("e*x = x. x*e = x. x*x'=e. x'*x=e. x*(y*z)=(x*y)*z.")
 
 # TODO predicate name consisting of clause number and split number
