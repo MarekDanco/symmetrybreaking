@@ -2,7 +2,7 @@
 
 from parsing import shallow3, collect, Var, get_terms
 from itertools import product
-from basics import pick_one, var, var_enc
+from basics import pick_one, var, var_enc, var_pred
 
 
 class Grounding:
@@ -12,9 +12,13 @@ class Grounding:
         self.s = s
         self.ids = ids
 
-    def get_prms(self, tup, lit, names):
+    def get_lit(self, tup, lit, names):
         """Get parameters for a propositional variable."""
-        sign = lit.op == "="
+        sign = lit.op[0] != "!"
+        if lit.tag == 3:
+            op = lit.op if sign else lit.op[1:]
+            args = tuple([tup[names[v.name]] for v in lit.args])
+            return var_pred(self.ids, sign, op, args)
         d = tup[names[lit.args[0].name]]  # first arg in equality is always Var
         func = lit.args[1]  # second is always Term
         if func.tag == 2:
@@ -28,7 +32,7 @@ class Grounding:
                 x = tup[names[func.args[0].name]]
                 y = tup[names[func.args[1].name]]
                 return var_enc(self.s, sign, x, y, d)
-        return sign, op, arg, d
+        return var(self.ids, sign, op, arg, d)
 
     def ground_cl(self, cl):
         """Ground a clause with elements of domain of size s."""
@@ -50,12 +54,7 @@ class Grounding:
                     else:
                         add_lit = False
                 if add_lit:  # dont append if x!=y
-                    prms = self.get_prms(tup, lit, names)
-                    if isinstance(prms, tuple):
-                        sign, op, arg, d = prms
-                        gr.append(var(self.ids, sign, op, arg, d))
-                    else:
-                        gr.append(prms)
+                    gr.append(self.get_lit(tup, lit, names))
             if add_gr:  # dont add grounding if x=y
                 clauses += [gr]
         return clauses

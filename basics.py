@@ -118,21 +118,27 @@ def out(model, s, counter, time, ids=None, constants=None, inverses=False):
     return cl
 
 
+def var_pred(ids, sign, op, args):
+    """Propositional variable for splitting predicates."""
+    rv = ids.id((op, args))
+    return rv if sign else -rv
+
+
 def var_enc(s, sign, x, y, d):
     """Propositional variable for "*" operation."""
     rv = x * s**2 + y * s + d + 1
     return rv if sign else -rv
 
 
-def var(ids, sign, op, args, d):
+def var(ids, sign, op, arg, d):
     """Return propositional variable for equality of terms."""
     if op == "*":
         # rv = ids.id(("*", args[0], args[1], d))
         assert False, 'Use var_enc to encode variables for "*".'
     if op == "_":  # constants
-        rv = ids.id(("_", args, d))
+        rv = ids.id(("_", arg, d))
     if op == "'":
-        rv = ids.id(("'", args, d))
+        rv = ids.id(("'", arg, d))
     return rv if sign else -rv
 
 

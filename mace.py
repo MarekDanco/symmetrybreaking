@@ -8,6 +8,7 @@ from grounding import Grounding
 from minmod import minimal, lnh
 from basics import out, Timer
 from parse_canset import alg1, alg2
+from splitting import Splitting
 
 
 def testme(inp):
@@ -27,13 +28,17 @@ def testme(inp):
     flattened = transform(tree)
     t.stop()
 
+    t.start(text="splitting")
+    split = Splitting().transform(flattened)
+    t.stop()
+
     s = args.domain
     ids = IDPool(occupied=[[1, s**3]])
     cnf = []
 
     t.start(text="grounding")
     g = Grounding(s, ids)
-    cnf += g.ground(flattened)
+    cnf += g.ground(split)
     t.stop()
 
     t.start(text="1-hot")

@@ -65,7 +65,7 @@ def collect(t, tp):
         return rv
     if isinstance(t, Const):
         return rv
-    if isinstance(t, Apply):
+    if isinstance(t, (Apply, Predicate)):
         return rv | {v for a in t.args for v in collect(a, tp)}
     if isinstance(t, Clause):
         return rv | {v for a in t.literals for v in collect(a, tp)}
@@ -144,6 +144,8 @@ def shallow(lit):
 def shallow3(lit):
     """Check shallow literals of the form 3 from paradoxpaper.
     Return values: 1 -> x!=y, 2 -> possibly form 2, 3 -> form 3."""
+    if lit.tag == 3:
+        return 2
     term1, term2 = get_terms(lit)
     if term1.tag == 1:
         if term2.tag == 1:
