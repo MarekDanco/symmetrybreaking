@@ -20,7 +20,7 @@ class Grounding:
         if func.tag == 2:
             op = "_"
             arg = func.name
-        if func.tag == 0:
+        elif func.tag == 0:
             op = func.op
             if len(func.args) == 1:
                 arg = tup[names[func.args[0].name]]
@@ -33,10 +33,9 @@ class Grounding:
     def ground_cl(self, cl):
         """Ground a clause with elements of domain of size s."""
         clauses = []
-        vars = tuple(sorted(collect(cl, Var)))
+        vars = tuple(sorted([v.name for v in collect(cl, Var)]))
         rep = len(vars)
-        vars_names = tuple([v.name for v in vars])
-        names = {vars_names[i]: i for i in range(rep)}
+        names = {vars[i]: i for i in range(rep)}
 
         for tup in product(range(self.s), repeat=rep):
             gr = []  # grounding for current tuple
