@@ -77,9 +77,9 @@ def collect(t, tp):
 
 def find_inv(t):
     """Check if the parsed tree contains inverses."""
-    if isinstance(t, Apply) and t.op == Parser.PRIME:
+    if isinstance(t, Apply) and t.op == "'":
         return True
-    if isinstance(t, Var) or isinstance(t, Const):
+    if isinstance(t, (Var, Const)):
         return False
 
     if isinstance(t, Apply):
@@ -311,9 +311,10 @@ def testme(inp):
     print("flattened:")
     ftree = transform(tree)
     print(tostr(ftree))
+    print(find_inv(ftree))
 
 
 if __name__ == "__main__":
     # testme("x*y=w | x*y = z | x!=y | y!=z | w!=z.")
-    # testme("x*e=x. e*x=x. x*(y*z)=(x*y)*z. x*x'=e. x'*x=e.")
-    testme("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.")
+    testme("x*e=x. e*x=x. x*(y*z)=(x*y)*z. x*x'=e. x'*x=e.")
+    # testme("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.")
