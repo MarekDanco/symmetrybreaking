@@ -1,4 +1,4 @@
-"""Find models for an algebra using MACE."""
+"""Find models for the algebra on input using MACE."""
 
 from argparser import arg_parser
 from pysat.solvers import Solver

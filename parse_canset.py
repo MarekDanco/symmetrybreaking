@@ -15,6 +15,7 @@ from parsing import (
     find_inv,
     tostr,
 )
+from splitting import Splitting
 
 
 def canset_var(ids, sign, op, args, d):
@@ -345,6 +346,7 @@ def testme(inp):
     inverses = find_inv(tree)
     constants = tuple(sorted(collect(tree, Const)))
     flattened = transform(tree)
+    split = Splitting().transform(flattened)
 
     s = args.domain
     ids = IDPool(occupied=[[1, s**3]])
@@ -353,7 +355,7 @@ def testme(inp):
     t = Timer()
     t.start(text="grounding")
     g = Grounding(s, ids)
-    phi += g.ground(flattened)
+    phi += g.ground(split)
     phi += g.one_hot(constants, inverses)
     t.stop()
 
@@ -377,5 +379,4 @@ def testme(inp):
 if __name__ == "__main__":
     # testme("x*y=z*w.")
     # testme("e*x = x. x*e = x. x*x'=e. x'*x=e. x*(y*z)=(x*y)*z. c*d!=d*c.")
-    # testme("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.")
-    testme("e*x = x. x*e = x. x*x'=e. x'*x=e. x*(y*z)=(x*y)*z.")
+    testme("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.")

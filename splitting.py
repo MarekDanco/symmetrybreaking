@@ -1,9 +1,7 @@
 """Clause splitting with Paradox heuristic."""
 
 from parsing import (
-    Apply,
     Var,
-    Const,
     Predicate,
     Clause,
     CNF,
@@ -90,5 +88,5 @@ def testme(inp):
 
 
 if __name__ == "__main__":
-    testme("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.")
+    testme("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e. x*(y*z)=(x*y)*z.")
     # testme("e*x = x. x*e = x. x*x'=e. x'*x=e. x*(y*z)=(x*y)*z.")

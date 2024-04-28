@@ -119,7 +119,7 @@ def out(model, s, counter, time, ids=None, constants=None, inverses=False):
 
 
 def var_pred(ids, sign, op, args):
-    """Propositional variable for splitting predicates."""
+    """Propositional variable for a splitting predicate."""
     rv = ids.id((op, args))
     return rv if sign else -rv
 

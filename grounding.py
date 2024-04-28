@@ -13,13 +13,13 @@ class Grounding:
         self.ids = ids
 
     def get_lit(self, tup, lit, names):
-        """Get parameters for a propositional variable."""
+        """Get propositional variable for a given ground literal."""
         sign = lit.op[0] != "!"
         if lit.tag == 3:
             op = lit.op if sign else lit.op[1:]
             args = tuple([tup[names[v.name]] for v in lit.args])
             return var_pred(self.ids, sign, op, args)
-        d = tup[names[lit.args[0].name]]  # first arg in equality is always Var
+        d = tup[names[lit.args[0].name]]  # first arg in (in)equality is always Var
         func = lit.args[1]  # second is always Term
         if func.tag == 2:
             op = "_"
@@ -28,7 +28,7 @@ class Grounding:
             op = func.op
             if len(func.args) == 1:
                 arg = tup[names[func.args[0].name]]
-            if len(func.args) == 2:
+            elif len(func.args) == 2:
                 x = tup[names[func.args[0].name]]
                 y = tup[names[func.args[1].name]]
                 return var_enc(self.s, sign, x, y, d)
@@ -37,12 +37,12 @@ class Grounding:
     def ground_cl(self, cl):
         """Ground a clause with elements of domain of size s."""
         clauses = []
-        vars = tuple(sorted([v.name for v in collect(cl, Var)]))
+        vars = sorted([v.name for v in collect(cl, Var)])
         rep = len(vars)
         names = {vars[i]: i for i in range(rep)}
 
         for tup in product(range(self.s), repeat=rep):
-            gr = []  # grounding for current tuple
+            gr = []  # grounding for the current tuple
             add_gr = True
             for lit in cl.literals:
                 add_lit = True
