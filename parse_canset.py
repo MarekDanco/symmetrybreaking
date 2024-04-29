@@ -3,7 +3,7 @@
 from argparser import arg_parser
 from pysat.solvers import Solver
 from pysat.formula import IDPool
-from basics import pick_one, print_cnf, debug_model, Timer, out, var_enc
+from basics import pick_one, print_cnf, debug_model, Timer, out, var_enc, var
 from minmod import minimality, inv, assump, equal_values
 from itertools import product
 from grounding import Grounding
@@ -19,7 +19,7 @@ from splitting import Splitting
 
 
 def canset_var(ids, sign, op, args, d):
-    """Propositional variable for equality of terms."""
+    """Propositional variable permutation."""
     rv = ids.id(f"{op}_{args}={d}")
     return rv if sign else -rv
 
@@ -159,7 +159,7 @@ def greater(ids, s, cells):
 def alg1(ids, phi, s, args, main=False, constants=None, inverses=False):
     """Compute canonical set of permutations for given problem phi."""
     cnf = []
-
+    phi += [[canset_var(ids, True, "pi", 0, 0)], [var(ids, True, "_", "e", 0)]]
     cnf += phi
     cnf += perm(ids, s)
     cells = [(x, y) for x in range(s) for y in range(s)]
