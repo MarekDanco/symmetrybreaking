@@ -160,7 +160,7 @@ def alg1(ids, phi, s, args, main=False, constants=None, inverses=False):
     """Compute canonical set of permutations for given problem phi."""
     cnf = []
     phi += [[var(ids, True, "_", "e", 0)]]
-    cnf += [[canset_var(ids, True, "pi", 0, 0)]]
+    phi += [[canset_var(ids, True, "pi", 0, 0)]]
     cnf += phi
     cnf += perm(ids, s)
     cells = [(x, y) for x in range(s) for y in range(s)]

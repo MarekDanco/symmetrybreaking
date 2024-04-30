@@ -6,9 +6,11 @@ from pysat.formula import IDPool
 from parsing import Parser, transform, Const, collect, find_inv
 from grounding import Grounding
 from minmod import minimal, lnh
-from basics import out, Timer
+from basics import out, Timer, var_enc
 from parse_canset import alg1, alg2
 from splitting import Splitting
+import pyapproxmc
+from itertools import product
 
 
 def testme(inp):
@@ -68,6 +70,15 @@ def testme(inp):
         cnf += minimal(ids, s, args, perms=p)
         t.stop()
 
+    mc = pyapproxmc.Counter()
+    for c in cnf:
+        mc.add_clause(c)
+    print("running approx count", flush=True)
+    rng = range(s)
+    proj = [var_enc(s, True, x, y, d) for x, y in product(rng, repeat=2) for d in rng]
+    count = mc.count(proj)
+    print("Approximate count is: %d*2**%d" % (count[0], count[1]))
+
     solver = Solver(name=args.solver, bootstrap_with=cnf)
     counter = 0
     while True:
@@ -93,7 +104,7 @@ def testme(inp):
     print(f"total time: {mins:.0f} {word} {secs:.4f} seconds")
 
 
-testme("e*x = x. x*e = x. x*x'=e. x'*x=e. x*(y*z)=(x*y)*z.")
-# testme("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.")
+# testme("e*x = x. x*e = x. x*x'=e. x'*x=e. x*(y*z)=(x*y)*z.")
+testme("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.")
 # testme("x*(y*z)=(x*y)*z.")
 # testme("x*x=x. (x*y)*x=y.")  # Constructing Finite Algebras with FALCON
