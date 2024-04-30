@@ -93,7 +93,7 @@ def testme(inp):
     print(f"total time: {mins:.0f} {word} {secs:.4f} seconds")
 
 
-# testme("e*x = x. x*e = x. x*x'=e. x'*x=e. x*(y*z)=(x*y)*z. c*d!=d*c.")
-testme("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.")
+testme("e*x = x. x*e = x. x*x'=e. x'*x=e. x*(y*z)=(x*y)*z.")
+# testme("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.")
 # testme("x*(y*z)=(x*y)*z.")
 # testme("x*x=x. (x*y)*x=y.")  # Constructing Finite Algebras with FALCON
