@@ -343,8 +343,15 @@ def testme(inp):
     total = Timer()
     total.start(out=False)
     args = arg_parser().parse_args()
+
+    if args.filename == "-":
+        data = inp
+    else:
+        with open(args.filename, "r", encoding="utf-8") as infile:
+            data = infile.read()
+
     p = Parser()
-    tree = p.parse(inp)
+    tree = p.parse(data)
     inverses = find_inv(tree)
     constants = tuple(sorted(collect(tree, Const)))
     flattened = transform(tree)
@@ -380,5 +387,5 @@ def testme(inp):
 
 if __name__ == "__main__":
     # testme("x*y=z*w.")
-    testme("e*x = x. x*e = x. x*x'=e. x'*x=e. x*(y*z)=(x*y)*z.")
-    # testme("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.")
+    # testme("e*x = x. x*e = x. x*x'=e. x'*x=e. x*(y*z)=(x*y)*z.")
+    testme("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.")

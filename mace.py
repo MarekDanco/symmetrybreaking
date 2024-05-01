@@ -17,11 +17,18 @@ def testme(inp):
     total = Timer()
     total.start(out=False)
     args = arg_parser().parse_args()
+    print(args)
     t = Timer()
+
+    if args.filename == "-":
+        data = inp
+    else:
+        with open(args.filename, "r", encoding="utf-8") as infile:
+            data = infile.read()
 
     t.start(text="parsing")
     p = Parser()
-    tree = p.parse(inp)
+    tree = p.parse(data)
     t.stop()
     inverses = find_inv(tree)
     constants = tuple(sorted(collect(tree, Const)))
@@ -70,14 +77,14 @@ def testme(inp):
         cnf += minimal(ids, s, args, perms=p)
         t.stop()
 
+    print("approximate model count:", flush=True, end=" ")
     mc = pyapproxmc.Counter()
     for c in cnf:
         mc.add_clause(c)
-    print("running approx count", flush=True)
     rng = range(s)
     proj = [var_enc(s, True, x, y, d) for x, y in product(rng, repeat=2) for d in rng]
     count = mc.count(proj)
-    print("Approximate count is: %d*2**%d" % (count[0], count[1]))
+    print(f"{count[0]}*2**{count[1]}")
 
     solver = Solver(name=args.solver, bootstrap_with=cnf)
     counter = 0
@@ -104,7 +111,7 @@ def testme(inp):
     print(f"total time: {mins:.0f} {word} {secs:.4f} seconds")
 
 
-# testme("e*x = x. x*e = x. x*x'=e. x'*x=e. x*(y*z)=(x*y)*z.")
-testme("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.")
+testme("e*x = x. x*e = x. x*x'=e. x'*x=e. x*(y*z)=(x*y)*z.")
+# testme("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.")
 # testme("x*(y*z)=(x*y)*z.")
 # testme("x*x=x. (x*y)*x=y.")  # Constructing Finite Algebras with FALCON

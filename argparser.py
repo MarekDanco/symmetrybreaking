@@ -7,6 +7,18 @@ def arg_parser():
     """Returns ArgumentParser object equipped with defined arguments."""
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument(
+        "domain",
+        help="domain size",
+        type=int,
+    )
+    arg_parser.add_argument(
+        "filename",
+        help="filename with input formula",
+        default="-",
+        nargs="?",
+        type=str,
+    )
+    arg_parser.add_argument(
         "-p",
         "--permutations",
         help="encode minimality under all permutations",
@@ -34,12 +46,8 @@ def arg_parser():
         action="store_true",
     )
     arg_parser.add_argument(
-        "domain",
-        type=int,
-        help="domain size",
-    )
-    arg_parser.add_argument(
-        "solver",
+        "-s",
+        "--solver",
         help="name of  the SAT solver, set to Cadical195 by default",
         default="cd19",
         nargs="?",

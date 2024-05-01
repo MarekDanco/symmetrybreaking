@@ -10,5 +10,5 @@ moufang loop
 z*(x*(z*y))=((z*x)*z)*y. x*(z*(y*z))=((x*z)*y)*z.
 (z*x)*(y*z)=(z*(x*y))*z. (z*x)*(y*z)=z*((x*y)*z).
 
-chow
+implication zroupoid
 (x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.
