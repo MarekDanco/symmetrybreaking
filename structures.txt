@@ -6,11 +6,11 @@ e*x = x. x*e = x. x*x'=e. x'*x=e. x*(y*z)=(x*y)*z.
 loop
 x*y!=x*z | y=z. y*x!=z*x | y=z. e*x=x. x*e=x.
 
-moufang loops which are not groups
-x*y!=x*z | y=z. y*x!=z*x | y=z.
+moufang loop which is not a group
+x*y!=x*z | y=z. y*x!=z*x | y=z. e*x=x. x*e=x.
 z*(x*(z*y))=((z*x)*z)*y. x*(z*(y*z))=((x*z)*y)*z.
 (z*x)*(y*z)=(z*(x*y))*z. (z*x)*(y*z)=z*((x*y)*z).
-e*c!=c. d*e!=d. f*f'!=e. g'*g!=e. h*(i*j)!=(h*i)*j.
+c*c'!=e. d'*d!=e. f*(g*h)!=(f*g)*h.
 
 implication zroupoid
 (x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.
