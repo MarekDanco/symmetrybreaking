@@ -3,6 +3,7 @@
 from copy import deepcopy
 from collections import namedtuple, deque
 from pyparsing import Suppress, Word, Forward, Optional, ZeroOrMore, Literal
+from argparser import arg_parser
 
 
 Apply = namedtuple("Apply", ["op", "args", "tag"])  # function applications, tag = 0
@@ -33,7 +34,7 @@ class Parser:
 
     def __init__(self):
         var = Word("wxyz").set_parse_action(lambda s, loc, ts: Var(name=ts[0], tag=1))
-        const = Word("cdefg").set_parse_action(
+        const = Word("cdefghij").set_parse_action(
             lambda s, loc, ts: Const(name=ts[0], tag=2)
         )
         term = Forward()
@@ -303,15 +304,23 @@ def transform(tree):
 
 def testme(inp):
     """Test the formula on input."""
+    args = arg_parser().parse_args()
+
+    if args.filename == "-":
+        data = inp
+    else:
+        with open(args.filename, "r", encoding="utf-8") as infile:
+            data = infile.read()
+
     p = Parser()
-    tree = p.parse(inp)
+    tree = p.parse(data)
 
     print("input:")
     print(tostr(tree))
     print("flattened:")
     ftree = transform(tree)
     print(tostr(ftree))
-    print(find_inv(ftree))
+    print("inverses in the formula" if find_inv(ftree) else "no inverses")
 
 
 if __name__ == "__main__":
