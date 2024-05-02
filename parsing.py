@@ -34,7 +34,7 @@ class Parser:
 
     def __init__(self):
         var = Word("wxyz").set_parse_action(lambda s, loc, ts: Var(name=ts[0], tag=1))
-        const = Word("cdefghij").set_parse_action(
+        const = Word("cdefgh").set_parse_action(
             lambda s, loc, ts: Const(name=ts[0], tag=2)
         )
         term = Forward()
