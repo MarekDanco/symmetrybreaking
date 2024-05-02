@@ -8,9 +8,8 @@ x*y!=x*z | y=z. y*x!=z*x | y=z. e*x=x. x*e=x.
 
 moufang loop which is not a group
 x*y!=x*z | y=z. y*x!=z*x | y=z. e*x=x. x*e=x.
-z*(x*(z*y))=((z*x)*z)*y. x*(z*(y*z))=((x*z)*y)*z.
-(z*x)*(y*z)=(z*(x*y))*z. (z*x)*(y*z)=z*((x*y)*z).
-c*c'!=e. d'*d!=e. f*(g*h)!=(f*g)*h.
+z*(x*(z*y))=((z*x)*z)*y.
+c*(d*f)!=(c*d)*f.
 
 implication zroupoid
 (x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.
