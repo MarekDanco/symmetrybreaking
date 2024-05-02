@@ -2,7 +2,7 @@
 
 from argparser import arg_parser
 from pysat.solvers import Solver
-from pysat.formula import IDPool
+from pysat.formula import IDPool, CNF
 from parsing import Parser, transform, Const, collect, find_inv
 from grounding import Grounding
 from minmod import minimal, lnh
@@ -13,7 +13,17 @@ import pyapproxmc
 from itertools import product
 
 
-def testme(inp):
+def cnf2dimacs(cnf, s, args):
+    """Export the computed CNF to simplified DIMACS format."""
+    dimacs = CNF(from_clauses=cnf)
+    rng = range(s)
+    proj = " ".join([var_enc(s, True, x, y, d) for x, y, d in product(rng, repeat=3)])
+    comment = [f"ind {proj} 0"]
+    dimacs.to_file(args.dimacs, comments=comment)
+    return
+
+
+def run_main(inp):
     total = Timer()
     total.start(out=False)
     args = arg_parser().parse_args()
@@ -78,12 +88,15 @@ def testme(inp):
         cnf += minimal(ids, s, args, perms=p)
         t.stop()
 
+    if args.dimacs != "-":
+        cnf2dimacs(cnf, s, args)
+
     print("approximate model count:", flush=True, end=" ")
     mc = pyapproxmc.Counter()
     for c in cnf:
         mc.add_clause(c)
     rng = range(s)
-    proj = [var_enc(s, True, x, y, d) for x, y in product(rng, repeat=2) for d in rng]
+    proj = [var_enc(s, True, x, y, d) for x, y, d in product(rng, repeat=3)]
     count = mc.count(proj)
     print(f"{count[0]}*2**{count[1]}")
 
@@ -112,7 +125,7 @@ def testme(inp):
     print(f"total time: {mins:.0f} {word} {secs:.4f} seconds")
 
 
-testme("e*x = x. x*e = x. x*x'=e. x'*x=e. x*(y*z)=(x*y)*z.")
-# testme("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.")
-# testme("x*(y*z)=(x*y)*z.")
-# testme("x*x=x. (x*y)*x=y.")  # Constructing Finite Algebras with FALCON
+# run_main("e*x = x. x*e = x. x*x'=e. x'*x=e. x*(y*z)=(x*y)*z.")
+# run_main("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.")
+run_main("x*(y*z)=(x*y)*z.")
+# run_main("x*x=x. (x*y)*x=y.")  # Constructing Finite Algebras with FALCON

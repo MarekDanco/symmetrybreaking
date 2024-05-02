@@ -46,6 +46,14 @@ def arg_parser():
         action="store_true",
     )
     arg_parser.add_argument(
+        "-d",
+        "--dimacs",
+        help="export the computed CNF to a file in DIMACS format",
+        default="-",
+        nargs="?",
+        type=str,
+    )
+    arg_parser.add_argument(
         "-s",
         "--solver",
         help="name of  the SAT solver, set to Cadical195 by default",
