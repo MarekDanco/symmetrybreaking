@@ -7,7 +7,7 @@ from parsing import Parser, transform, Const, collect, find_inv
 from grounding import Grounding
 from minmod import minimal, lnh
 from basics import out, Timer, var_enc
-from parse_canset import alg1, alg2
+from canset import alg1, alg2
 from splitting import Splitting
 import pyapproxmc
 from itertools import product
@@ -17,8 +17,9 @@ def testme(inp):
     total = Timer()
     total.start(out=False)
     args = arg_parser().parse_args()
-    print(args)
     t = Timer()
+
+    # print(args)
 
     if args.filename == "-":
         data = inp
@@ -50,9 +51,9 @@ def testme(inp):
     cnf += g.ground(split)
     t.stop()
 
-    t.start(text="1-hot")
+    # t.start(text="1-hot")
     cnf += g.one_hot(constants, inverses)
-    t.stop()
+    # t.stop()
 
     p = None
     if args.lnh:
