@@ -17,8 +17,10 @@ def cnf2dimacs(cnf, s, args):
     """Export the computed CNF to simplified DIMACS format."""
     dimacs = CNF(from_clauses=cnf)
     rng = range(s)
-    proj = " ".join([var_enc(s, True, x, y, d) for x, y, d in product(rng, repeat=3)])
-    comment = [f"ind {proj} 0"]
+    proj = " ".join(
+        [str(var_enc(s, True, x, y, d)) for x, y, d in product(rng, repeat=3)]
+    )
+    comment = [f"c ind {proj} 0"]
     dimacs.to_file(args.dimacs, comments=comment)
     return
 
