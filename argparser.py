@@ -46,6 +46,13 @@ def arg_parser():
         action="store_true",
     )
     arg_parser.add_argument(
+        "-a",
+        "--approx",
+        help="approximate the number of models",
+        default=False,
+        action="store_true",
+    )
+    arg_parser.add_argument(
         "-d",
         "--dimacs",
         help="export the computed CNF to a file in DIMACS format",

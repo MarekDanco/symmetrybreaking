@@ -91,14 +91,15 @@ def run_main(inp):
     if args.dimacs != "-":
         cnf2dimacs(cnf, s, args)
 
-    print("approximate model count:", flush=True, end=" ")
-    mc = pyapproxmc.Counter()
-    for c in cnf:
-        mc.add_clause(c)
-    rng = range(s)
-    proj = [var_enc(s, True, x, y, d) for x, y, d in product(rng, repeat=3)]
-    count = mc.count(proj)
-    print(f"{count[0]}*2**{count[1]}")
+    if args.approx:
+        print("approximate model count:", flush=True, end=" ")
+        mc = pyapproxmc.Counter()
+        for c in cnf:
+            mc.add_clause(c)
+        rng = range(s)
+        proj = [var_enc(s, True, x, y, d) for x, y, d in product(rng, repeat=3)]
+        count = mc.count(proj)
+        print(f"{count[0]}*2**{count[1]}")
 
     solver = Solver(name=args.solver, bootstrap_with=cnf)
     counter = 0
