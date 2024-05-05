@@ -17,11 +17,19 @@ def cnf2dimacs(cnf, s, args):
     """Export the computed CNF to simplified DIMACS format."""
     dimacs = CNF(from_clauses=cnf)
     rng = range(s)
+    dimacs.to_file(args.dimacs)
+
     proj = " ".join(
         [str(var_enc(s, True, x, y, d)) for x, y, d in product(rng, repeat=3)]
     )
-    comment = [f"c ind {proj} 0"]
-    dimacs.to_file(args.dimacs, comments=comment)
+
+    with open(args.dimacs, "r") as file:
+        lines = file.readlines()
+
+    lines.insert(1, f"c ind {proj} 0\n")
+
+    with open(args.dimacs, "w") as file:
+        file.writelines(lines)
     return
 
 
@@ -30,8 +38,6 @@ def run_main(inp):
     total.start(out=False)
     args = arg_parser().parse_args()
     t = Timer()
-
-    # print(args)
 
     if args.filename == "-":
         data = inp
@@ -130,5 +136,5 @@ def run_main(inp):
 
 # run_main("e*x = x. x*e = x. x*x'=e. x'*x=e. x*(y*z)=(x*y)*z.")
 # run_main("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.")
-run_main("x*(y*z)=(x*y)*z.")
+run_main(".")
 # run_main("x*x=x. (x*y)*x=y.")  # Constructing Finite Algebras with FALCON
