@@ -56,7 +56,6 @@ def arg_parser():
         "-d",
         "--dimacs",
         help="export the computed CNF to a file in DIMACS format",
-        default="-",
         nargs="?",
         type=str,
     )
