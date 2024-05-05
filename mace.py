@@ -96,7 +96,7 @@ def run_main(inp):
         cnf += minimal(ids, s, args, perms=p)
         t.stop()
 
-    if args.dimacs != "-":
+    if args.dimacs:
         cnf2dimacs(cnf, s, args)
 
     if args.approx:
