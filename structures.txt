@@ -6,6 +6,12 @@ right involutory magma
 quasigroup
 x*y!=x*z | y=z. y*x!=z*x | y=z.
 
+commutative quasigroup
+x*y!=x*z | y=z. y*x!=z*x | y=z. x*y=y*x.
+
+medial quasigroup
+x*y!=x*z | y=z. y*x!=z*x | y=z. (x*y)*(w*z)=(x*w)*(y*z).
+
 loop
 x*y!=x*z | y=z. y*x!=z*x | y=z. e*x=x. x*e=x.
 
