@@ -3,6 +3,9 @@ First-order formulas of different algebraic structures.
 group
 e*x = x. x*e = x. x*x'=e. x'*x=e. x*(y*z)=(x*y)*z.
 
+quasigroup
+x*y!=x*z | y=z. y*x!=z*x | y=z.
+
 loop
 x*y!=x*z | y=z. y*x!=z*x | y=z. e*x=x. x*e=x.
 
@@ -17,5 +20,5 @@ implication groupoid
 semigroup
 x*(y*z)=(x*y)*z.
 
-quasigroup
-x*y!=x*z | y=z. y*x!=z*x | y=z.
+right involutory magma
+(x*y)*y=x.
