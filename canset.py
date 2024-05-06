@@ -386,6 +386,4 @@ def testme(inp):
 
 
 if __name__ == "__main__":
-    # testme("x*y=z*w.")
-    # testme("e*x = x. x*e = x. x*x'=e. x'*x=e. x*(y*z)=(x*y)*z.")
-    testme("(x*y)*z = (((z*d)*x) * ((y*z)*d))*d. (d*d)*d = d.")
+    testme(".")
