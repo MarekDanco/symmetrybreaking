@@ -20,5 +20,8 @@ implication groupoid
 semigroup
 x*(y*z)=(x*y)*z.
 
+monoid
+x*(y*z)=(x*y)*z. e*x = x. x*e = x.
+
 right involutory magma
 (x*y)*y=x.
