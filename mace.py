@@ -11,6 +11,7 @@ from canset import alg1, alg2
 from splitting import Splitting
 import pyapproxmc
 from itertools import product
+import sys
 
 
 def cnf2dimacs(cnf, s, args):
@@ -132,9 +133,8 @@ def run_main(inp):
     secs %= 60
     word = "minute" if mins == 1 else "minutes"
     print(f"total time: {mins:.0f} {word} {secs:.4f} seconds")
+    return 0
 
 
-# run_main("e*x = x. x*e = x. x*x'=e. x'*x=e. x*(y*z)=(x*y)*z.")
-# run_main("(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.")
-run_main(".")
-# run_main("x*x=x. (x*y)*x=y.")  # Constructing Finite Algebras with FALCON
+if __name__ == "__main__":
+    sys.exit(run_main("."))
