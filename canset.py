@@ -16,6 +16,7 @@ from parsing import (
     tostr,
 )
 from splitting import Splitting
+from math import factorial
 
 
 def canset_var(ids, sign, op, args, d):
@@ -311,7 +312,7 @@ def greater2(ids, cells, pi, s, assumptions=False):
     return clauses
 
 
-def alg2(ids, phi, s, p, args):
+def alg2(ids, phi, s, p, args, main=False):
     """Reduce canonical set p."""
     cnf = []
     cnf += phi
@@ -335,6 +336,10 @@ def alg2(ids, phi, s, p, args):
         )
         if solver.solve(assumptions=asmps):
             p_reduce.append(pi)  # pi is not redundant
+        else:
+            if main:
+                print(f"{pi} is redundant")
+
     solver.delete
     return p_reduce
 
@@ -372,9 +377,13 @@ def testme(inp):
     print("Canonical set: ", flush=True)
     print(p)
 
+    print("Reducing the canonical set")
+    p2 = alg2(ids, phi, s, p, args, main=True)
     print("Reduced canonical set: ", flush=True)
-    p2 = alg2(ids, phi, s, p, args)
     print(p2)
+
+    print(f"Size of the reduced canonical set: {len(p2)}")
+    print(f"n!-1 = {factorial(s) - 1}")
 
     secs = total.stop(out=False)
     if secs < 60:
