@@ -340,6 +340,9 @@ def alg2(ids, phi, s, p, args, main=False):
             if main:
                 print(f"{pi} is redundant")
 
+    if main:
+        print(f"Size of the reduced canonical set: {len(p)}")
+        print(f"n!-1 = {factorial(s) - 1}")
     solver.delete
     return p_reduce
 
@@ -381,9 +384,6 @@ def testme(inp):
     p2 = alg2(ids, phi, s, p, args, main=True)
     print("Reduced canonical set: ", flush=True)
     print(p2)
-
-    print(f"Size of the reduced canonical set: {len(p2)}")
-    print(f"n!-1 = {factorial(s) - 1}")
 
     secs = total.stop(out=False)
     if secs < 60:

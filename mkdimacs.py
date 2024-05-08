@@ -5,7 +5,7 @@ from pysat.formula import IDPool, CNF
 from basics import var_enc
 import argparse
 import sys
-from parsing import Parser, find_inv, collect, Const, transform, tostr
+from parsing import Parser, find_inv, collect, Const, transform
 from splitting import Splitting
 from grounding import Grounding
 from canset import alg1, alg2
@@ -38,8 +38,6 @@ def cnf2dimacs(cnf, s, args):
 def mkdimacs(data, args):
     p = Parser()
     tree = p.parse(data)
-    print("parsed algebra: ")
-    print(tostr(tree))
     inverses = find_inv(tree)
     constants = tuple(sorted(collect(tree, Const)))
 
@@ -52,6 +50,7 @@ def mkdimacs(data, args):
             print(f"Directory '{args.path}' created.")
 
     for s in range(args.lowbound, args.upbound + 1):
+        print("===")
         print(f"making DIMACS for domain size {s}")
         ids = IDPool(occupied=[[1, s**3]])
         cnf = []
@@ -60,8 +59,8 @@ def mkdimacs(data, args):
         cnf += g.ground(split)
         cnf += g.one_hot(constants, inverses)
 
-        p = alg1(ids, cnf, s, args, constants=constants)
-        p = alg2(ids, cnf, s, p, args)
+        p = alg1(ids, cnf, s, args, constants=constants, main=True)
+        p = alg2(ids, cnf, s, p, args, main=True)
 
         cnf += minimal(ids, s, args, perms=p)
         cnf2dimacs(cnf, s, args)
