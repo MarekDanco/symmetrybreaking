@@ -87,7 +87,6 @@ def run_main(inp):
         type=str,
     )
     arg_parser.add_argument(
-        "-p",
         "--path",
         help="path to the output directory, output here by default",
         default="",
