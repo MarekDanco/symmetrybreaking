@@ -58,10 +58,13 @@ def mkdimacs(data, args):
         g = Grounding(s, ids)
         cnf += g.ground(split)
         cnf += g.one_hot(constants, inverses)
-
-        p = alg1(ids, cnf, s, args, constants=constants, main=True)
-        p = alg2(ids, cnf, s, p, args, main=True)
-
+        p = None
+        if args.permutations:
+            print("encoding minimality under all permutations")
+        else:
+            print("computing canonical set")
+            p = alg1(ids, cnf, s, args, constants=constants, main=True)
+            p = alg2(ids, cnf, s, p, args, main=True)
         cnf += minimal(ids, s, args, perms=p)
         cnf2dimacs(cnf, s, args)
     return
@@ -99,7 +102,13 @@ def run_main(inp):
         default=2,
         type=int,
     )
-    arg_parser.add_argument("--permutations", default=False)
+    arg_parser.add_argument(
+        "-p",
+        "--permutations",
+        help="encode minimality under all permutations",
+        default=False,
+        action="store_true",
+    )
     arg_parser.add_argument("--transpositions", default=False)
     arg_parser.add_argument("--concentric", default=False)
     arg_parser.add_argument("-lnh", default=False)
