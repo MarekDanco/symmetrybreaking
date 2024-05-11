@@ -20,6 +20,10 @@ x*y!=x*z | y=z. y*x!=z*x | y=z. e*x=x. x*e=x.
 z*(x*(z*y))=((z*x)*z)*y.
 c*(d*f)!=(c*d)*f.
 
+inverse property (IP) loops
+x*y!=x*z | y=z. y*x!=z*x | y=z. e*x=x. x*e=x.
+x'*(x*y)=y. (y*x)*x'=y.
+
 implication zroupoid
 (x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.
 
