@@ -1,0 +1,33 @@
+First-order formulas of different algebraic structures.
+
+right involutory magma
+(x*y)*y=x.
+
+quasigroup
+x*y!=x*z | y=z. y*x!=z*x | y=z.
+
+commutative quasigroup
+x*y!=x*z | y=z. y*x!=z*x | y=z. x*y=y*x.
+
+medial quasigroup
+x*y!=x*z | y=z. y*x!=z*x | y=z. (x*y)*(w*z)=(x*w)*(y*z).
+
+loop
+x*y!=x*z | y=z. y*x!=z*x | y=z. e*x=x. x*e=x.
+
+moufang loop which is not a group
+x*y!=x*z | y=z. y*x!=z*x | y=z. e*x=x. x*e=x.
+z*(x*(z*y))=((z*x)*z)*y.
+c*(d*f)!=(c*d)*f.
+
+implication groupoid
+(x*y)*z = (((z*e)*x) * ((y*z)*e))*e. (e*e)*e = e.
+
+semigroup
+x*(y*z)=(x*y)*z.
+
+monoid
+x*(y*z)=(x*y)*z. e*x = x. x*e = x.
+
+group
+e*x = x. x*e = x. x*x'=e. x'*x=e. x*(y*z)=(x*y)*z.
