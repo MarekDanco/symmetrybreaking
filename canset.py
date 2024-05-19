@@ -158,7 +158,8 @@ def greater(ids, s, cells):
 
 
 def alg1(ids, phi, s, args, main=False, constants=None, inverses=False):
-    """Compute canonical set of permutations for given problem phi."""
+    """Compute canonizing set of permutations for given problem phi."""
+    print("computing a canonizing set")
     cnf = []
     if len(constants) == 1:  # set the only constant to 0 and fix pi(0)=0
         phi += [[var(ids, True, "_", constants[0].name, 0)]]
@@ -195,9 +196,14 @@ def alg1(ids, phi, s, args, main=False, constants=None, inverses=False):
         assert len(prm) == s, "Found permutation has wrong length."
         if main:
             print(f"permutation: {prm}")
+        else:
+            if counter % 10 == 0:
+                print(f"currently {counter} permutations in the canonizing set")
         solver.append_formula(minimality(ids, cells, prm, s))
         perms += [prm]
     solver.delete()
+    if not main:
+        print(f"{counter-1} permutations in the cononizing set before reduction")
     return perms
 
 
@@ -208,13 +214,13 @@ def smaller_set(pi, d, s):
 
 def grtr2(ids, pi, cell):
     """Variable for "cell is greater than pi(inv(cell))" in A>pi(A) constraints
-    in canonical set reduction algorithm."""
+    in canonizing set reduction algorithm."""
     return ids.id(("grtr", pi, tuple(cell)))
 
 
 def eql_grtr2(ids, pi, cell):
     """Variable for "cell is equal to pi(inv(cell))" in A>pi(A) constraints
-    in canonical set reduction algorithm."""
+    in canonizing set reduction algorithm."""
     return ids.id(("eqlg", pi, tuple(cell)))
 
 
@@ -313,7 +319,8 @@ def greater2(ids, cells, pi, s, assumptions=False):
 
 
 def alg2(ids, phi, s, p, args, main=False):
-    """Reduce canonical set p."""
+    """Reduce canonizing set p."""
+    print("reducing the canonizing set")
     cnf = []
     cnf += phi
     cells = [(x, y) for x in range(s) for y in range(s)]
@@ -340,10 +347,9 @@ def alg2(ids, phi, s, p, args, main=False):
             if main:
                 print(f"{pi} is redundant")
 
-    if main:
-        print(f"Size of the reduced canonical set: {len(p)}")
-        print(f"n!-1 = {factorial(s) - 1}")
     solver.delete
+    print(f"size of the reduced canonizing set: {len(p_reduce)}")
+    print(f"n!-1 = {factorial(s) - 1}")
     return p_reduce
 
 
@@ -377,12 +383,11 @@ def testme(inp):
     t.stop()
 
     p = alg1(ids, phi, s, args, main=True, constants=constants, inverses=inverses)
-    print("Canonical set: ", flush=True)
+    print("Canonizing set: ", flush=True)
     print(p)
 
-    print("Reducing the canonical set")
     p2 = alg2(ids, phi, s, p, args, main=True)
-    print("Reduced canonical set: ", flush=True)
+    print("Reduced canonizing set: ", flush=True)
     print(p2)
 
     secs = total.stop(out=False)

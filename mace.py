@@ -82,13 +82,13 @@ def run_main(inp):
     elif args.permutations:
         print("encoding minimality under all permutations")
     else:
-        t.start(text="canonical set")
+        t.start(out=False)
         p = alg1(ids, cnf, s, args, constants=constants)
-        t.stop()
+        print(f"canonizing set took: {t.stop(out=False):.4f} seconds")
 
-        t.start(text="reduced canonical set")
+        t.start(out=False)
         p = alg2(ids, cnf, s, p, args)
-        t.stop()
+        print(f"reduction took: {t.stop(out=False):.4f} seconds")
 
     if args.lnh:
         cnf += lnh(ids, s, args, constants=constants, inverses=inverses)
