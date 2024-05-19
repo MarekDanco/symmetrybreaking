@@ -1,0 +1,2 @@
+x*y!=x*z | y=z. y*x!=z*x | y=z. e*x=x. x*e=x.
+x'*(x*y)=y. (y*x)*x'=y.
