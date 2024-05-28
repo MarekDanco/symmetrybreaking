@@ -14,26 +14,6 @@ from itertools import product
 import sys
 
 
-def cnf2dimacs(cnf, s, args):
-    """Export the computed CNF to simplified DIMACS format."""
-    dimacs = CNF(from_clauses=cnf)
-    dimacs.to_file(args.dimacs)
-
-    rng = range(s)
-    proj = " ".join(
-        [str(var_enc(s, True, x, y, d)) for x, y, d in product(rng, repeat=3)]
-    )
-
-    with open(args.dimacs, "r") as file:
-        lines = file.readlines()
-
-    lines.insert(1, f"c ind {proj} 0\n")
-
-    with open(args.dimacs, "w") as file:
-        file.writelines(lines)
-    return
-
-
 def run_main(inp):
     total = Timer()
     total.start(out=False)
@@ -96,9 +76,6 @@ def run_main(inp):
         t.start(text="minimality")
         cnf += minimal(ids, s, args, perms=p)
         t.stop()
-
-    if args.dimacs:
-        cnf2dimacs(cnf, s, args)
 
     if args.approx:
         print("approximate model count:", flush=True, end=" ")

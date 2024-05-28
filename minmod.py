@@ -169,7 +169,7 @@ def lnh(ids, s, args, constants=None, inverses=None):
     if args.concentric:
         cells.sort(key=lambda e: max(e[0], e[1]))
 
-    # TODO inverses ?
+    # TODO inverses
 
     for i, cnst in enumerate(constants):
         if i + 1 == s:  # whole domain allowed
