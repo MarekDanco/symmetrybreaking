@@ -121,7 +121,6 @@ def greater(ids, s, cells):
     """Constraints for A>pi(A) where pi is a variable."""
     clauses = []
     clauses += sub_rhs(ids, s)
-    rng = range(s)
 
     for cell in cells:
         clauses += sub_grtr(ids, cell, s)
@@ -132,6 +131,7 @@ def greater(ids, s, cells):
     ]  # at least one pair of cells is not equal
 
     # constraints for the first cell
+    # DOES NOT WORK FOR ARBITRARY ORDERING OF CELLS ([0, 0] has to be the first cell)
     clauses += [
         [grtr(ids, [0, 0]), eql_grtr(ids, [0, 0])],
         [grtr(ids, [0, 0]), r_grtr(ids, 0)],
@@ -147,6 +147,8 @@ def greater(ids, s, cells):
         clauses += [[r, g, e], [r, g, r_grtr(ids, i)]]
 
     # constraints for the last cell
+    # DOES NOT WORK FOR ARBITRARY ORDERING OF CELLS ([s-1, s-1] has to be the last cell)
+    # TODO
     clauses += [
         [
             -r_grtr(ids, s**2 - 2),
