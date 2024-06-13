@@ -131,10 +131,9 @@ def greater(ids, s, cells):
     ]  # at least one pair of cells is not equal
 
     # constraints for the first cell
-    # DOES NOT WORK FOR ARBITRARY ORDERING OF CELLS ([0, 0] has to be the first cell)
     clauses += [
-        [grtr(ids, [0, 0]), eql_grtr(ids, [0, 0])],
-        [grtr(ids, [0, 0]), r_grtr(ids, 0)],
+        [grtr(ids, cells[0]), eql_grtr(ids, cells[0])],
+        [grtr(ids, cells[0]), r_grtr(ids, 0)],
     ]
 
     for i, cell in enumerate(cells):
@@ -147,13 +146,11 @@ def greater(ids, s, cells):
         clauses += [[r, g, e], [r, g, r_grtr(ids, i)]]
 
     # constraints for the last cell
-    # DOES NOT WORK FOR ARBITRARY ORDERING OF CELLS ([s-1, s-1] has to be the last cell)
-    # TODO
     clauses += [
         [
             -r_grtr(ids, s**2 - 2),
-            grtr(ids, [s - 1, s - 1]),
-            eql_grtr(ids, [s - 1, s - 1]),
+            grtr(ids, cells[-1]),
+            eql_grtr(ids, cells[-1]),
         ]
     ]
     return clauses
@@ -295,8 +292,8 @@ def greater2(ids, cells, pi, s, assumptions=False):
 
     # constraints for the first cell
     clauses += [
-        [grtr2(ids, pi, [0, 0]), eql_grtr2(ids, pi, [0, 0])] + asmp,
-        [grtr2(ids, pi, [0, 0]), r_grtr(ids, 0)] + asmp,
+        [grtr2(ids, pi, cells[0]), eql_grtr2(ids, pi, cells[0])] + asmp,
+        [grtr2(ids, pi, cells[0]), r_grtr(ids, 0)] + asmp,
     ]
 
     for i, cell in enumerate(cells):
@@ -312,8 +309,8 @@ def greater2(ids, cells, pi, s, assumptions=False):
     clauses += [
         [
             -r_grtr(ids, s**2 - 2),
-            grtr2(ids, pi, [s - 1, s - 1]),
-            eql_grtr2(ids, pi, [s - 1, s - 1]),
+            grtr2(ids, pi, cells[-1]),
+            eql_grtr2(ids, pi, cells[-1]),
         ]
         + asmp
     ]
