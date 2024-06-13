@@ -115,8 +115,8 @@ def minimality(ids, cells, pi: tuple, s, assumptions=False):
 
         # constraints for the first cell
         clauses += [
-            [less(ids, pi, [0, 0]), equal(ids, pi, [0, 0])] + asmp,
-            [less(ids, pi, [0, 0]), relax(ids, pi, 0)] + asmp,
+            [less(ids, pi, cells[0]), equal(ids, pi, cells[0])] + asmp,
+            [less(ids, pi, cells[0]), relax(ids, pi, 0)] + asmp,
         ]
 
         for i, cell in enumerate(cells):
@@ -132,8 +132,8 @@ def minimality(ids, cells, pi: tuple, s, assumptions=False):
         clauses += [
             [
                 -relax(ids, pi, s**2 - 2),
-                less(ids, pi, [s - 1, s - 1]),
-                equal(ids, pi, [s - 1, s - 1]),
+                less(ids, pi, cells[-1]),
+                equal(ids, pi, cells[-1]),
             ]
             + asmp
         ]
