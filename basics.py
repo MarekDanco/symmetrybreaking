@@ -14,16 +14,32 @@ class Timer:
     def __init__(self) -> None:
         self._start_time = None
 
-    def start(self, text="elapsed time", out=True):
+    def transform(self, secs):
+        if secs < 60:
+            return f"{secs:.4f} seconds"
+        mins = secs // 60
+        secs %= 60
+        if mins < 60:
+            word_min = "minute" if mins == 1 else "minutes"
+            return f"{mins:.0f} {word_min} {secs:.4f} seconds"
+        hours = mins // 60
+        mins %= 60
+        word_hour = "hour" if hours == 1 else "hours"
+        if mins > 0:
+            word_min = "minute" if mins == 1 else "minutes"
+            return f"{hours:.0f} {word_hour} {mins:.0f} {word_min} {secs:.4f} seconds"
+        return f"{hours:.0f} {word_hour} {secs:.4f} seconds"
+
+    def start(self, text="computing", out=True):
         """Start a new timer."""
         if self._start_time is not None:
             raise TimerError(f"Timer is running. Use .stop() to stop it")
 
         self._start_time = time.perf_counter()
         if out:
-            print(f"{text}: ", end="", flush=True)
+            print(f"{text}:", flush=True)
 
-    def stop(self, out=True):
+    def stop(self, text="computation took", out=True):
         """Stop the timer and report the elapsed time."""
         if self._start_time is None:
             raise TimerError(f"Timer is not running. Use .start() to start it")
@@ -31,7 +47,7 @@ class Timer:
         elapsed_time = time.perf_counter() - self._start_time
         self._start_time = None
         if out:
-            print(f"{elapsed_time:.4f} seconds")
+            print(f"{text}: {self.transform(elapsed_time)}")
         return elapsed_time
 
 

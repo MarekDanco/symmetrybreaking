@@ -2,7 +2,7 @@
 
 from argparser import arg_parser
 from pysat.solvers import Solver
-from pysat.formula import IDPool, CNF
+from pysat.formula import IDPool
 from parsing import Parser, transform, Const, collect, find_inv
 from grounding import Grounding
 from minmod import minimal, lnh
@@ -103,13 +103,7 @@ def run_main(inp):
         else:
             break
     solver.delete()
-    secs = total.stop(out=False)
-    if secs < 60:
-        return print(f"total time: {secs:.4f} seconds")
-    mins = secs // 60
-    secs %= 60
-    word = "minute" if mins == 1 else "minutes"
-    print(f"total time: {mins:.0f} {word} {secs:.4f} seconds")
+    total.stop(text="total time")
     return 0
 
 

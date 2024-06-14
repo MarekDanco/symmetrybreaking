@@ -388,13 +388,7 @@ def testme(inp):
     print("Reduced canonizing set: ", flush=True)
     print(p2)
 
-    secs = total.stop(out=False)
-    if secs < 60:
-        return print(f"total time: {secs:.4f} seconds")
-    mins = secs // 60
-    secs %= 60
-    word = "minute" if mins == 1 else "minutes"
-    print(f"total time: {mins:.0f} {word} {secs:.4f} seconds")
+    total.stop(text="total time")
 
 
 if __name__ == "__main__":
