@@ -166,3 +166,16 @@ def pick_one(lits):
 def at_most_one(lits):
     """At most one of the lits is true."""
     return [[-v1, -v2] for v1 in lits for v2 in lits if v1 < v2]
+
+
+def order(s, args):
+    """Order cells according to the given parameter."""
+    rng = range(s)
+    cells = [(x, y) for x in rng for y in rng]
+    if args.concentric:
+        cells.sort(key=lambda e: max(e[0], e[1]))
+    if args.diagonal:
+        diagonal = [pair for pair in cells if pair[0] == pair[1]]
+        non_diagonal = [pair for pair in cells if pair[0] != pair[1]]
+        cells = diagonal + non_diagonal
+    return cells

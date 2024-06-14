@@ -3,7 +3,7 @@
 from argparser import arg_parser
 from pysat.solvers import Solver
 from pysat.formula import IDPool
-from basics import pick_one, print_cnf, debug_model, Timer, out, var_enc, var
+from basics import pick_one, print_cnf, debug_model, Timer, out, var_enc, var, order
 from minmod import minimality, inv, assump, equal_values
 from itertools import product
 from grounding import Grounding
@@ -165,9 +165,7 @@ def alg1(ids, phi, s, args, main=False, constants=None, inverses=False):
         cnf += [[canset_var(ids, True, "pi", 0, 0)]]
     cnf += phi
     cnf += perm(ids, s)
-    cells = [(x, y) for x in range(s) for y in range(s)]
-    if args.concentric:
-        cells.sort(key=lambda e: max(e[0], e[1]))
+    cells = order(s, args)
     cnf += greater(ids, s, cells)
     solver = Solver(name=args.solver, bootstrap_with=cnf)
 
@@ -322,9 +320,7 @@ def alg2(ids, phi, s, p, args, main=False):
     print("reducing the canonizing set")
     cnf = []
     cnf += phi
-    cells = [(x, y) for x in range(s) for y in range(s)]
-    if args.concentric:
-        cells.sort(key=lambda e: max(e[0], e[1]))
+    cells = order(s, args)
 
     for pi in p:
         cnf += minimality(ids, cells, pi, s, assumptions=True)

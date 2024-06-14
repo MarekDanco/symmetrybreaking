@@ -1,7 +1,7 @@
 """Functions for encoding model minimality with respect to some ordering."""
 
-from basics import var, print_cnf, var_enc
-from itertools import permutations, product
+from basics import var, print_cnf, var_enc, order
+from itertools import permutations
 from pysat.formula import IDPool
 
 
@@ -145,9 +145,7 @@ def minimal(ids, s, args, perms: list = None):
     clauses = []
     rng = range(s)
 
-    cells = [(x, y) for x in rng for y in rng]
-    if args.concentric:
-        cells.sort(key=lambda e: max(e[0], e[1]))
+    cells = order(s, args)
 
     if perms is None:
         perms = transps(s) if args.transpositions else permutations(rng)

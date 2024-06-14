@@ -40,6 +40,13 @@ def arg_parser():
         action="store_true",
     )
     arg_parser.add_argument(
+        "-d",
+        "--diagonal",
+        help="encode minimality with respect to diagonal ordering",
+        default=False,
+        action="store_true",
+    )
+    arg_parser.add_argument(
         "-lnh",
         help="break symmetries using the Least Number Heuristic",
         default=False,
@@ -51,13 +58,6 @@ def arg_parser():
         help="approximate the number of models",
         default=False,
         action="store_true",
-    )
-    arg_parser.add_argument(
-        "-d",
-        "--dimacs",
-        help="export the computed CNF to a file in DIMACS format",
-        nargs="?",
-        type=str,
     )
     arg_parser.add_argument(
         "-s",
