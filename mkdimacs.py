@@ -62,9 +62,8 @@ def mkdimacs(data, args):
         if args.permutations:
             print("encoding minimality under all permutations")
         else:
-            print("computing canonical set")
-            p = alg1(ids, cnf, s, args, constants=constants, main=True)
-            p = alg2(ids, cnf, s, p, args, main=True)
+            p = alg1(ids, cnf, s, args, constants=constants, main=False)
+            p = alg2(ids, cnf, s, p, args, main=False)
         cnf += minimal(ids, s, args, perms=p)
         cnf2dimacs(cnf, s, args)
     return
@@ -109,6 +108,7 @@ def run_main(inp):
         action="store_true",
     )
     arg_parser.add_argument("--transpositions", default=False)
+    arg_parser.add_argument("--diagonal", default=False)
     arg_parser.add_argument("--concentric", default=False)
     arg_parser.add_argument("-lnh", default=False)
     arg_parser.add_argument("--solver", default="cd19")
