@@ -29,17 +29,17 @@ def run_main(inp):
     t.start(text="parsing")
     p = Parser()
     tree = p.parse(data)
-    t.stop()
+    t.stop(text="parsing took")
     inverses = find_inv(tree)
     constants = tuple(sorted(collect(tree, Const)))
 
     t.start(text="flattening")
     flattened = transform(tree)
-    t.stop()
+    t.stop(text="flattening took")
 
     t.start(text="splitting")
     split = Splitting().transform(flattened)
-    t.stop()
+    t.stop(text="splitting took")
 
     s = args.domain
     ids = IDPool(occupied=[[1, s**3]])
@@ -48,7 +48,7 @@ def run_main(inp):
     t.start(text="grounding")
     g = Grounding(s, ids)
     cnf += g.ground(split)
-    t.stop()
+    t.stop(text="grounding took")
 
     # t.start(text="1-hot")
     cnf += g.one_hot(constants, inverses)
@@ -64,18 +64,17 @@ def run_main(inp):
     else:
         t.start(out=False)
         p = alg1(ids, cnf, s, args, constants=constants)
-        print(f"canonizing set took: {t.stop(out=False):.4f} seconds")
+        t.stop(text="canonizing set took")
 
         t.start(out=False)
         p = alg2(ids, cnf, s, p, args)
-        print(f"reduction took: {t.stop(out=False):.4f} seconds")
-
+        t.stop(text="reduction took")
     if args.lnh:
         cnf += lnh(ids, s, args, constants=constants, inverses=inverses)
     else:
         t.start(text="minimality")
         cnf += minimal(ids, s, args, perms=p)
-        t.stop()
+        t.stop(text="minimality took")
 
     if args.approx:
         print("approximate model count:", flush=True, end=" ")

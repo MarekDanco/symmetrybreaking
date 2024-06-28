@@ -2,7 +2,7 @@
 
 from itertools import product
 from pysat.formula import IDPool, CNF
-from basics import var_enc
+from basics import var_enc, Timer
 import argparse
 import sys
 from parsing import Parser, find_inv, collect, Const, transform
@@ -36,6 +36,7 @@ def cnf2dimacs(cnf, s, args):
 
 
 def mkdimacs(data, args):
+    t = Timer()
     p = Parser()
     tree = p.parse(data)
     inverses = find_inv(tree)
@@ -62,15 +63,26 @@ def mkdimacs(data, args):
         if args.permutations:
             print("encoding minimality under all permutations")
         else:
+            t.start(out=False)
             p = alg1(ids, cnf, s, args, constants=constants, main=False)
+            t.stop(text="canonizing set took")
+            t.start(out=False)
             p = alg2(ids, cnf, s, p, args, main=False)
+            t.stop(text="reduction took")
+        t.start(text="minimality")
         cnf += minimal(ids, s, args, perms=p)
+        t.stop(text="minimality took")
+        t.start(text="creating DIMACS")
         cnf2dimacs(cnf, s, args)
+        t.stop(text="DIMACS took")
     return
 
 
 def run_main(inp):
     """Run the whole program."""
+    total = Timer()
+    total.start(out=False)
+
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument(
         "upbound",
@@ -120,6 +132,7 @@ def run_main(inp):
         with open(args.filename, "r", encoding="utf-8") as infile:
             data = infile.read()
     mkdimacs(data, args)
+    total.stop(text="total time")
     return 0
 
 
