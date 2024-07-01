@@ -119,12 +119,33 @@ def run_main(inp):
         default=False,
         action="store_true",
     )
+    arg_parser.add_argument(
+        "-c",
+        "--concentric",
+        help="encode minimality with respect to concentric ordering",
+        default=False,
+        action="store_true",
+    )
+    arg_parser.add_argument(
+        "-d",
+        "--diagonal",
+        help="encode minimality with respect to diagonal ordering",
+        default=False,
+        action="store_true",
+    )
+
     arg_parser.add_argument("--transpositions", default=False)
-    arg_parser.add_argument("--diagonal", default=False)
-    arg_parser.add_argument("--concentric", default=False)
     arg_parser.add_argument("-lnh", default=False)
     arg_parser.add_argument("--solver", default="cd19")
     args = arg_parser.parse_args()
+
+    if args.concentric:
+        ordering = "concentric"
+    elif args.diagonal:
+        ordering = "diagonal first"
+    else:
+        ordering = "row by row"
+    print(f"ordering of cells: {ordering}")
 
     if args.filename == "-":
         data = inp

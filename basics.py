@@ -174,7 +174,7 @@ def order(s, args):
     cells = [(x, y) for x in rng for y in rng]
     if args.concentric:
         cells.sort(key=lambda e: max(e[0], e[1]))
-    if args.diagonal:
+    elif args.diagonal:
         diagonal = [pair for pair in cells if pair[0] == pair[1]]
         non_diagonal = [pair for pair in cells if pair[0] != pair[1]]
         cells = diagonal + non_diagonal

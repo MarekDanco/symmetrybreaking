@@ -54,6 +54,14 @@ def run_main(inp):
     cnf += g.one_hot(constants, inverses)
     # t.stop()
 
+    if args.concentric:
+        ordering = "concentric"
+    elif args.diagonal:
+        ordering = "diagonal first"
+    else:
+        ordering = "row by row"
+    print(f"ordering of cells: {ordering}")
+
     p = None
     if args.lnh:
         print("breaking symmetries using the Least Number Heuristic")

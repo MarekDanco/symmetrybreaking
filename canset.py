@@ -376,7 +376,15 @@ def testme(inp):
     g = Grounding(s, ids)
     phi += g.ground(split)
     phi += g.one_hot(constants, inverses)
-    t.stop()
+    t.stop(text="grounding took")
+
+    if args.concentric:
+        ordering = "concentric"
+    elif args.diagonal:
+        ordering = "diagonal first"
+    else:
+        ordering = "row by row"
+    print(f"ordering of cells: {ordering}")
 
     p = alg1(ids, phi, s, args, main=True, constants=constants, inverses=inverses)
     print("Canonizing set: ", flush=True)
