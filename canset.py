@@ -343,7 +343,9 @@ def alg2(ids, phi, s, p, args, main=False):
                 print(f"{pi} is redundant")
 
     solver.delete
-    print(f"size of the reduced canonizing set: {len(p_reduce)} (n! = {factorial(s)})")
+    print(
+        f"size of the reduced canonizing set: {len(p_reduce)} ({s}! = {factorial(s)})"
+    )
     return p_reduce
 
 
