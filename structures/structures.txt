@@ -39,8 +39,8 @@ x*(y*z)=(x*y)*z. e*x = x. x*e = x.
 AG-groupoid
 (x*y)*z=(z*y)*x.
 
-rectangular AG-groupoid
-(x*y)*z=(z*y)*x. (w*x)*(y*z) = (w*z)*(y*x).
+rectangular groupoid
+w*x != y*z | w*x = w*z.
 
 group
 e*x = x. x*e = x. x*x'=e. x'*x=e. x*(y*z)=(x*y)*z.
