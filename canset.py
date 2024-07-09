@@ -195,7 +195,7 @@ def alg1(ids, phi, s, args, main=False, constants=None, inverses=False):
             print(f"permutation: {prm}")
         else:
             if counter % 10 == 0:
-                print(f"{counter} permutations in the canonizing set")
+                print(f"{counter} permutations in the canonizing set", flush=True)
         solver.append_formula(minimality(ids, cells, prm, s))
         perms += [prm]
     solver.delete()

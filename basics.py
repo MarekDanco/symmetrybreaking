@@ -47,7 +47,7 @@ class Timer:
         elapsed_time = time.perf_counter() - self._start_time
         self._start_time = None
         if out:
-            print(f"{text}: {self.transform(elapsed_time)}")
+            print(f"{text}: {self.transform(elapsed_time)}", flush=True)
         return elapsed_time
 
 
