@@ -51,8 +51,8 @@ def mkdimacs(data, args):
             print(f"Directory '{args.path}' created.")
 
     for s in range(args.lowbound, args.upbound + 1):
-        print("===")
-        print(f"making DIMACS for domain size {s}")
+        print("===", flush=True)
+        print(f"making DIMACS for domain size {s}", flush=True)
         ids = IDPool(occupied=[[1, s**3]])
         cnf = []
 
