@@ -48,7 +48,7 @@ def mkdimacs(data, args):
     if args.path != "":
         if not os.path.exists(args.path):
             os.mkdir(args.path)
-            print(f"Directory '{args.path}' created.")
+            print(f"Directory '{args.path}' created.", flush=True)
 
     for s in range(args.lowbound, args.upbound + 1):
         print("===", flush=True)
@@ -61,7 +61,7 @@ def mkdimacs(data, args):
         cnf += g.one_hot(constants, inverses)
         p = None
         if args.permutations:
-            print("encoding minimality under all permutations")
+            print("encoding minimality under all permutations", flush=True)
         else:
             t.start(out=False)
             p = alg1(ids, cnf, s, args, constants=constants, main=False)
@@ -145,7 +145,7 @@ def run_main(inp):
         ordering = "diagonal first"
     else:
         ordering = "row by row"
-    print(f"ordering of cells: {ordering}")
+    print(f"ordering of cells: {ordering}", flush=True)
 
     if args.filename == "-":
         data = inp

@@ -158,7 +158,7 @@ def greater(ids, s, cells):
 
 def alg1(ids, phi, s, args, main=False, constants=None, inverses=False):
     """Compute canonizing set of permutations for given problem phi."""
-    print("computing a canonizing set")
+    print("computing a canonizing set", flush=True)
     cnf = []
     if len(constants) == 1:  # set the only constant to 0 and fix pi(0)=0
         phi += [[var(ids, True, "_", constants[0].name, 0)]]
@@ -200,7 +200,10 @@ def alg1(ids, phi, s, args, main=False, constants=None, inverses=False):
         perms += [prm]
     solver.delete()
     if not main:
-        print(f"{counter-1} permutations in the cononizing set before reduction")
+        print(
+            f"{counter-1} permutations in the cononizing set before reduction",
+            flush=True,
+        )
     return perms
 
 
@@ -317,7 +320,7 @@ def greater2(ids, cells, pi, s, assumptions=False):
 
 def alg2(ids, phi, s, p, args, main=False):
     """Reduce canonizing set p."""
-    print("reducing the canonizing set")
+    print("reducing the canonizing set", flush=True)
     cnf = []
     cnf += phi
     cells = order(s, args)
@@ -344,7 +347,8 @@ def alg2(ids, phi, s, p, args, main=False):
 
     solver.delete
     print(
-        f"size of the reduced canonizing set: {len(p_reduce)} ({s}! = {factorial(s)})"
+        f"size of the reduced canonizing set: {len(p_reduce)} ({s}! = {factorial(s)})",
+        flush=True,
     )
     return p_reduce
 
@@ -384,7 +388,7 @@ def testme(inp):
         ordering = "diagonal first"
     else:
         ordering = "row by row"
-    print(f"ordering of cells: {ordering}")
+    print(f"ordering of cells: {ordering}", flush=True)
 
     p = alg1(ids, phi, s, args, main=True, constants=constants, inverses=inverses)
     print("Canonizing set: ", flush=True)
