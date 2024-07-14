@@ -1,0 +1,14 @@
+ordering of cells: row by row
+===
+making DIMACS for domain size 3
+computing a canonizing set
+0 permutations in the cononizing set before reduction
+canonizing set took: 0.0155 seconds
+reducing the canonizing set
+size of the reduced canonizing set: 0 (3! = 6)
+reduction took: 0.0003 seconds
+minimality:
+minimality took: 0.0000 seconds
+creating DIMACS:
+DIMACS took: 0.0014 seconds
+total time: 0.0258 seconds
