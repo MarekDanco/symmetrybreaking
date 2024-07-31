@@ -156,7 +156,7 @@ def greater(ids, s, cells):
     return clauses
 
 
-def alg1(ids, phi, s, args, main=False, constants=None, inverses=False):
+def alg1(ids, phi, s, args, cells, main=False, constants=None, inverses=False):
     """Compute canonizing set of permutations for given problem phi."""
     print("computing a canonizing set", flush=True)
     cnf = []
@@ -165,7 +165,7 @@ def alg1(ids, phi, s, args, main=False, constants=None, inverses=False):
         cnf += [[canset_var(ids, True, "pi", 0, 0)]]
     cnf += phi
     cnf += perm(ids, s)
-    cells = order(s, args)
+    # cells = order(s, args)
     cnf += greater(ids, s, cells)
     solver = Solver(name=args.solver, bootstrap_with=cnf)
 
@@ -318,12 +318,12 @@ def greater2(ids, cells, pi, s, assumptions=False):
     return clauses
 
 
-def alg2(ids, phi, s, p, args, main=False):
+def alg2(ids, phi, s, p, args, cells, main=False):
     """Reduce canonizing set p."""
     print("reducing the canonizing set", flush=True)
     cnf = []
     cnf += phi
-    cells = order(s, args)
+    # cells = order(s, args)
 
     for pi in p:
         cnf += minimality(ids, cells, pi, s, assumptions=True)
@@ -382,19 +382,24 @@ def testme(inp):
     phi += g.one_hot(constants, inverses)
     t.stop(text="grounding took")
 
-    if args.concentric:
+    cells, f = order(s, args)
+    if args.rows:
+        ordering = "row by row"
+    elif args.concentric:
         ordering = "concentric"
     elif args.diagonal:
         ordering = "diagonal first"
     else:
-        ordering = "row by row"
-    print(f"ordering of cells: {ordering}", flush=True)
+        ordering = f
+    print(f"ordering of cells: {ordering}")
 
-    p = alg1(ids, phi, s, args, main=True, constants=constants, inverses=inverses)
+    p = alg1(
+        ids, phi, s, args, cells, main=True, constants=constants, inverses=inverses
+    )
     print("Canonizing set: ", flush=True)
     print(p)
 
-    p2 = alg2(ids, phi, s, p, args, main=True)
+    p2 = alg2(ids, phi, s, p, args, cells, main=True)
     print("Reduced canonizing set: ", flush=True)
     print(p2)
 

@@ -6,7 +6,7 @@ from pysat.formula import IDPool
 from parsing import Parser, transform, Const, collect, find_inv
 from grounding import Grounding
 from minmod import minimal, lnh
-from basics import out, Timer, var_enc
+from basics import out, Timer, var_enc, order
 from canset import alg1, alg2
 from splitting import Splitting
 import pyapproxmc
@@ -54,12 +54,15 @@ def run_main(inp):
     cnf += g.one_hot(constants, inverses)
     # t.stop()
 
-    if args.concentric:
+    cells, f = order(s, args)
+    if args.rows:
+        ordering = "row by row"
+    elif args.concentric:
         ordering = "concentric"
     elif args.diagonal:
         ordering = "diagonal first"
     else:
-        ordering = "row by row"
+        ordering = f
     print(f"ordering of cells: {ordering}")
 
     p = None
@@ -71,17 +74,17 @@ def run_main(inp):
         print("encoding minimality under all permutations")
     else:
         t.start(out=False)
-        p = alg1(ids, cnf, s, args, constants=constants)
+        p = alg1(ids, cnf, s, args, cells, constants=constants)
         t.stop(text="canonizing set took")
 
         t.start(out=False)
-        p = alg2(ids, cnf, s, p, args)
+        p = alg2(ids, cnf, s, p, args, cells)
         t.stop(text="reduction took")
     if args.lnh:
         cnf += lnh(ids, s, args, constants=constants, inverses=inverses)
     else:
         t.start(text="minimality")
-        cnf += minimal(ids, s, args, perms=p)
+        cnf += minimal(ids, s, args, cells, perms=p)
         t.stop(text="minimality took")
 
     if args.approx:

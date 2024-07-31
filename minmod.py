@@ -140,12 +140,12 @@ def minimality(ids, cells, pi: tuple, s, assumptions=False):
     return clauses
 
 
-def minimal(ids, s, args, perms: list = None):
+def minimal(ids, s, args, cells, perms: list = None):
     """Compute CNF for minimal model."""
     clauses = []
     rng = range(s)
 
-    cells = order(s, args)
+    # cells = order(s, args)
 
     if perms is None:
         perms = transps(s) if args.transpositions else permutations(rng)

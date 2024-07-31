@@ -33,6 +33,13 @@ def arg_parser():
         action="store_true",
     )
     arg_parser.add_argument(
+        "-r",
+        "--rows",
+        help="encode minimality with respect to cells ordered by rows",
+        default=False,
+        action="store_true",
+    )
+    arg_parser.add_argument(
         "-c",
         "--concentric",
         help="encode minimality with respect to concentric ordering",

@@ -2,7 +2,7 @@
 
 from itertools import product
 from pysat.formula import IDPool, CNF
-from basics import var_enc, Timer
+from basics import var_enc, Timer, order
 import argparse
 import sys
 from parsing import Parser, find_inv, collect, Const, transform
@@ -59,18 +59,30 @@ def mkdimacs(data, args):
         g = Grounding(s, ids)
         cnf += g.ground(split)
         cnf += g.one_hot(constants, inverses)
+
+        cells, f = order(s, args)
+        if args.rows:
+            ordering = "row by row"
+        elif args.concentric:
+            ordering = "concentric"
+        elif args.diagonal:
+            ordering = "diagonal first"
+        else:
+            ordering = f
+        print(f"ordering of cells: {ordering}")
+
         p = None
         if args.permutations:
             print("encoding minimality under all permutations", flush=True)
         else:
             t.start(out=False)
-            p = alg1(ids, cnf, s, args, constants=constants, main=False)
+            p = alg1(ids, cnf, s, args, cells, constants=constants, main=False)
             t.stop(text="canonizing set took")
             t.start(out=False)
-            p = alg2(ids, cnf, s, p, args, main=False)
+            p = alg2(ids, cnf, s, p, args, cells, main=False)
             t.stop(text="reduction took")
         t.start(text="minimality")
-        cnf += minimal(ids, s, args, perms=p)
+        cnf += minimal(ids, s, args, cells, perms=p)
         t.stop(text="minimality took")
         t.start(text="creating DIMACS")
         cnf2dimacs(cnf, s, args)
@@ -120,6 +132,13 @@ def run_main(inp):
         action="store_true",
     )
     arg_parser.add_argument(
+        "-r",
+        "--rows",
+        help="encode minimality with respect to cells ordered by rows",
+        default=False,
+        action="store_true",
+    )
+    arg_parser.add_argument(
         "-c",
         "--concentric",
         help="encode minimality with respect to concentric ordering",
@@ -138,14 +157,6 @@ def run_main(inp):
     arg_parser.add_argument("-lnh", default=False)
     arg_parser.add_argument("--solver", default="cd19")
     args = arg_parser.parse_args()
-
-    if args.concentric:
-        ordering = "concentric"
-    elif args.diagonal:
-        ordering = "diagonal first"
-    else:
-        ordering = "row by row"
-    print(f"ordering of cells: {ordering}", flush=True)
 
     if args.filename == "-":
         data = inp

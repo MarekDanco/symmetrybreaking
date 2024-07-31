@@ -1,7 +1,9 @@
 """Functions for printing and basic MACE encodings."""
 
 from itertools import product
+from rank_fun import RankFuns, eval_fun
 import time
+import random
 
 
 class TimerError(Exception):
@@ -168,7 +170,7 @@ def at_most_one(lits):
     return [[-v1, -v2] for v1 in lits for v2 in lits if v1 < v2]
 
 
-def order(s, args):
+def order_old(s, args):
     """Order cells according to the given parameter."""
     rng = range(s)
     cells = [(x, y) for x in rng for y in rng]
@@ -179,3 +181,27 @@ def order(s, args):
         non_diagonal = [pair for pair in cells if pair[0] != pair[1]]
         cells = diagonal + non_diagonal
     return cells
+
+
+def order(s, args):
+    """Order cells according to the given parameter."""
+    rng = range(s)
+    cells = [(x, y) for x in rng for y in rng]
+    f = None
+    if args.rows:
+        pass
+    elif args.concentric:
+        cells.sort(key=lambda e: max(e[0], e[1]))
+    elif args.diagonal:
+        diagonal = [pair for pair in cells if pair[0] == pair[1]]
+        non_diagonal = [pair for pair in cells if pair[0] != pair[1]]
+        cells = diagonal + non_diagonal
+    else:
+        rf = RankFuns()
+        f = rf.make_random(5)
+        while f.is_constant():
+            f = rf.make_random(5)
+        cells.sort(
+            key=lambda cell: eval_fun(f, {rf.r: cell[0], rf.c: cell[1], rf.n: s})
+        )
+    return cells, f
