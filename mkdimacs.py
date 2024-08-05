@@ -151,6 +151,9 @@ def run_main(inp):
         default=False,
         action="store_true",
     )
+    arg_parser.add_argument(
+        "-C", "--custom", help="custom ordering function", type=str, default=None
+    )
 
     arg_parser.add_argument("--transpositions", default=False)
     arg_parser.add_argument("-lnh", default=False)
