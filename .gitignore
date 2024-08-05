@@ -1,9 +1,50 @@
-__pycache__/argparser.cpython-310.pyc
-__pycache__/basics.cpython-310.pyc
-__pycache__/grounding.cpython-310.pyc
-__pycache__/minmod.cpython-310.pyc
-__pycache__/parsing.cpython-310.pyc
-__pycache__/splitting.cpython-310.pyc
-__pycache__/canset.cpython-310.pyc
-__pycache__/parse_canset.cpython-310.pyc
-__pycache__/rank_fun.cpython-310.pyc
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# C extensions
+*.so
+
+# Distribution / packaging
+bin/
+build/
+develop-eggs/
+dist/
+eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+.tox/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+
+# Translations
+*.mo
+
+# Mr Developer
+.mr.developer.cfg
+.project
+.pydevproject
+
+# Rope
+.ropeproject
+
+# Django stuff:
+*.log
+*.pot
+
+# Sphinx documentation
+docs/_build/

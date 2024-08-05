@@ -1,16 +1,17 @@
 """Make DIMACS files for an algebra for different domain sizes."""
 
+import argparse
+import sys
+import os
+
 from itertools import product
 from pysat.formula import IDPool, CNF
 from basics import var_enc, Timer, order
-import argparse
-import sys
 from parsing import Parser, find_inv, collect, Const, transform
 from splitting import Splitting
 from grounding import Grounding
 from canset import alg1, alg2
 from minmod import minimal
-import os
 
 
 def cnf2dimacs(cnf, s, args):
@@ -32,7 +33,6 @@ def cnf2dimacs(cnf, s, args):
 
     with open(file, "w") as out:
         out.writelines(lines)
-    return
 
 
 def mkdimacs(data, args):
@@ -87,7 +87,6 @@ def mkdimacs(data, args):
         t.start(text="creating DIMACS")
         cnf2dimacs(cnf, s, args)
         t.stop(text="DIMACS took")
-    return
 
 
 def run_main(inp):

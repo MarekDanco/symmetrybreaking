@@ -1,9 +1,8 @@
 """Functions for printing and basic MACE encodings."""
 
+import time
 from itertools import product
 from rank_fun import RankFuns, eval_fun
-import time
-import random
 
 
 class TimerError(Exception):
@@ -78,7 +77,7 @@ def debug_model(ids, model, s):
     """Print nicely a  SAT model."""
     print("[")
     for i, lit in enumerate(model):
-        print(lit2str(ids, lit), end=" ")
+        print(lit2str(ids, lit, s), end=" ")
         if (i + 1) % s == 0 or i == len(model) - 1:
             print()
     print("]")
