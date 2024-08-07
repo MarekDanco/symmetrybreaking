@@ -18,6 +18,7 @@ from parsing import (
 from splitting import Splitting
 from math import factorial
 
+TOTAL_SAT = 0
 
 def canset_var(ids, sign, op, args, d):
     """Propositional variable permutation."""
@@ -177,6 +178,8 @@ def alg1(ids, phi, s, args, cells, main=False, constants=None, inverses=False):
         t.start(out=False)
         sat = solver.solve()
         time = t.stop(out=False)
+        global TOTAL_SAT
+        TOTAL_SAT += time
         if sat:
             model = solver.get_model()
             if main:
@@ -339,11 +342,15 @@ def alg2(ids, phi, s, p, args, cells, main=False):
             + [assump2(ids, prm) for prm in p if prm != pi]
             + [assump(ids, prm) for prm in p if prm not in p_reduce]
         )
+        t_sat = Timer()
+        t_sat.start(out=False)
         if solver.solve(assumptions=asmps):
             p_reduce.append(pi)  # pi is not redundant
         else:
             if main:
                 print(f"{pi} is redundant")
+        global TOTAL_SAT
+        TOTAL_SAT += t_sat.stop(out=False)
 
     solver.delete
     print(

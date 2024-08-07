@@ -12,6 +12,7 @@ from splitting import Splitting
 from grounding import Grounding
 from canset import alg1, alg2
 from minmod import minimal
+import canset
 
 
 def cnf2dimacs(cnf, s, args):
@@ -166,6 +167,7 @@ def run_main(inp):
         with open(args.filename, "r", encoding="utf-8") as infile:
             data = infile.read()
     mkdimacs(data, args)
+    print(f"TOTAL_SAT: {canset.TOTAL_SAT:.4f}", flush=True)
     total.stop(text="total time")
     return 0
 
