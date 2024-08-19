@@ -126,9 +126,9 @@ def greater(ids, s, cells):
         clauses += sub_grtr(ids, cell, s)
         clauses += sub_eql_grtr(ids, cell, s)
 
-    clauses += [
-        [-eql_grtr(ids, cell) for cell in cells]
-    ]  # at least one pair of cells is not equal
+    # clauses += [
+    #    [-eql_grtr(ids, cell) for cell in cells]
+    # ]  # at least one pair of cells is not equal
 
     # constraints for the first cell
     clauses += [
@@ -150,7 +150,7 @@ def greater(ids, s, cells):
         [
             -r_grtr(ids, s**2 - 2),
             grtr(ids, cells[-1]),
-            eql_grtr(ids, cells[-1]),
+            # eql_grtr(ids, cells[-1]),
         ]
     ]
     return clauses
