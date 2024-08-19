@@ -6,7 +6,6 @@
 
 import random
 from sympy import Symbol, Expr, sympify, Mul, Add, Abs
-from sympy.core.numbers import RationalConstant, IntegerConstant
 
 
 def eval_fun(e: Expr, s) -> float:
@@ -24,11 +23,15 @@ class RankFuns:
 
     def make_random(self, depth: int = 3) -> Expr:
         """create randomk function"""
+
+        def minus(a: Expr, b: Expr) -> Expr:
+            return a - b
+
         if depth <= 0:
             return random.choice(
                 self.symbols + [sympify(s) for s in ["1", "0", "-1", "1/2"]]
             )
-        op, arity = random.choice([(Mul, 2), (Add, 2), (Abs, 1)])
+        op, arity = random.choice([(minus, 2), (Mul, 2), (Add, 2), (Abs, 1)])
         return op(*[self.make_random(depth=depth - 1) for _ in range(arity)])
 
     def from_string(self, s: str) -> Expr:

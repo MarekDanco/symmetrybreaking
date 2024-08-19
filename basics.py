@@ -1,9 +1,8 @@
 """Functions for printing and basic MACE encodings."""
 
+import time
 from itertools import product
 from rank_fun import RankFuns, eval_fun
-import time
-import random
 
 
 class TimerError(Exception):
@@ -78,7 +77,7 @@ def debug_model(ids, model, s):
     """Print nicely a  SAT model."""
     print("[")
     for i, lit in enumerate(model):
-        print(lit2str(ids, lit), end=" ")
+        print(lit2str(ids, lit, s), end=" ")
         if (i + 1) % s == 0 or i == len(model) - 1:
             print()
     print("]")
@@ -183,6 +182,14 @@ def order_old(s, args):
     return cells
 
 
+def mk_rnd_fun(rf: RankFuns):
+    """Make random ranking function."""
+    f = rf.make_random(5)
+    while f.is_constant():
+        f = rf.make_random(5)
+    return f
+
+
 def order(s, args):
     """Order cells according to the given parameter."""
     rng = range(s)
@@ -198,9 +205,8 @@ def order(s, args):
         cells = diagonal + non_diagonal
     else:
         rf = RankFuns()
-        f = rf.make_random(5)
-        while f.is_constant():
-            f = rf.make_random(5)
+        f = rf.from_string(args.custom) if args.custom is not None else mk_rnd_fun(rf)
+        print("using custom function", f)
         cells.sort(
             key=lambda cell: eval_fun(f, {rf.r: cell[0], rf.c: cell[1], rf.n: s})
         )
