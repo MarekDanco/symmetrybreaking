@@ -205,8 +205,9 @@ def order(s, args):
         cells = diagonal + non_diagonal
     else:
         rf = RankFuns()
-        f = rf.from_string(args.custom) if args.custom is not None else mk_rnd_fun(rf)
-        print("using custom function", f)
+        # f = rf.from_string(args.custom) if args.custom is not None else mk_rnd_fun(rf)
+        f = mk_rnd_fun(rf)
+        # print("using custom function", f)
         cells.sort(
             key=lambda cell: eval_fun(f, {rf.r: cell[0], rf.c: cell[1], rf.n: s})
         )
