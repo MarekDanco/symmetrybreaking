@@ -10,11 +10,11 @@ The core of the SAT encoding in `Python` is done using the `PySAT` package [1].
 
 The whole program is run using the `main.py` script.
 
-The run of the program can be modified by various command line arguments. These include axioms of the algebraic structure, the domain size, different cell orderings, opting permutations used for symmetry breaking, counting the approximate number of models and choice of the SAT solver. The only required argument is the domain size `n`.
+The run of the program can be modified by various command line arguments. These include the domain size, axioms of the algebraic structure, different cell orderings, opting permutations used for symmetry breaking, counting the approximate number of models and choice of the SAT solver. The only required argument is the domain size `n`.
 
 ## Domain size `n`
 
-The minimal domain size is 2.
+Specify the domain size of the algebraic structure using an integer value. The minimal domain size is 2.
 
 ## Structure axioms
 
@@ -61,8 +61,10 @@ to `DIMACS` format and run your favorite model counter. For this use the `mkdima
 
 The command line arguments are similar to those used when running `main.py` except that if no lower bound argument `-l` is given, the program generates all `DIMACS` up to the domain size `n`. Additionally, you can specify the directory where you want to save the `DIMACS` using `--path` followed by the path to the directory ending with a `/`.
 
+<!--
 ## Find best ranking function
 ?
+-->
 
 ## Example
 
