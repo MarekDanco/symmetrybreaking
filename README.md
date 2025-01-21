@@ -18,7 +18,7 @@ Specify the domain size of the algebraic structure using an integer value. The m
 
 ## Structure axioms
 
-Axioms of the structures tested in [2] are listed in `structures`. To run the program on your favorite magma, type the axioms in a `.txt` file and include the path to this file in the argument.
+Axioms of the structures tested in [2] are listed in `structures`. To run the program on your favorite algebra, type the axioms in a `.txt` file and include the path to this file in the argument.
 
 If no axioms are given, non-isomorphic models are generated for magmas (i.e. no axioms restricting the binary function).
 
