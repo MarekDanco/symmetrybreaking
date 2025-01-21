@@ -155,10 +155,17 @@ def run_main(inp):
     arg_parser.add_argument(
         "-C", "--custom", help="custom ordering function", type=str, default=None
     )
+    arg_parser.add_argument(
+        "-s",
+        "--solver",
+        help="name of  the SAT solver, set to Cadical195 by default",
+        default="cd19",
+        nargs="?",
+        type=str,
+    )
 
     arg_parser.add_argument("--transpositions", default=False)
     arg_parser.add_argument("-lnh", default=False)
-    arg_parser.add_argument("--solver", default="cd19")
     args = arg_parser.parse_args()
 
     if args.filename == "-":
