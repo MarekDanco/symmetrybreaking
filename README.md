@@ -34,7 +34,7 @@ If no option is given, a random cell ordering is generated in the form of a func
 
 By default, symmetries are broken using canonizing sets as described in [2, 3].
 
-You can choose to break symmetries partially using all transpositions with `-t` or use all possible permutations with `-p` for complete symmetry breaking (infeasible for larger values of `n`). 
+You can choose to break symmetries partially using all transpositions with `-t` or you can use all possible permutations with `-p`&nbsp;for complete symmetry breaking (infeasible for larger values of `n`). 
 
 ## Approximate model counting
 
