@@ -76,5 +76,5 @@ python3 mkdimacs.py -l 5 -s g4 --path loop-dimacs/ 5 structures/loop.txt
 
 # References
 - [1] Ignatiev, A., Morgado, A., & Marques-Silva, J. (2018). PySAT: A Python Toolkit for Prototyping with SAT Oracles. In *Proceedings of the SAT Conference* (pp. 428-437). doi: [10.1007/978-3-319-94144-8_26](https://doi.org/10.1007/978-3-319-94144-8_26)
-- [2] TODO aaai paper reference
+- [2] Dančo, M., Janota, M., Codish, M., & Araújo, J. J. (2025). Complete Symmetry Breaking for Finite Models. Proceedings of the AAAI Conference on Artificial Intelligence, 39(11), 11194-11202. https://doi.org/10.1609/aaai.v39i11.33217
 - [3] Dančo, M. 2024. The Application of SAT Solving to Finite Model Finding. Master’s thesis, Charles University, Prague, Czech Republic. http://hdl.handle.net/20.500.11956/193190
