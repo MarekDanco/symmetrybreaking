@@ -52,7 +52,7 @@ The following command enumerates all non-isomorphic loops of order 5. Symmetry b
 python3 main.py -d -a -s g4 5 structures/loop.txt
 ```
 
-# Count all non-isomorphic models
+# Counting all non-isomorphic models
 
 Since enumerating all non-isomorphic structures in `Python` may be slow, to count all models you can export the SAT formula 
 to `DIMACS` format and run your favorite model counter. For this use the `mkdimacs.py` script.
